@@ -23,14 +23,14 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-gradient-to-br from-[#E0F2E9] to-[#CEB5A7]/50 flex justify-center px-4 py-6 sm:py-10 sm:items-center relative overflow-hidden overflow-y-hidden">
+    <div className="h-[100svh] w-full bg-gradient-to-br from-[#E0F2E9] to-[#CEB5A7]/50 flex items-center justify-center p-4 overflow-hidden relative">
       {/* blobs */}
       <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#5B7B7A]/15 rounded-full blur-3xl" />
       <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-[#A17C6B]/15 rounded-full blur-3xl" />
       <div className="absolute top-1/2 right-1/3 w-44 h-44 bg-[#CEB5A7]/20 rounded-full blur-3xl -translate-y-1/2" />
 
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-[#CEB5A7]/40 p-8 sm:p-10">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-[#CEB5A7]/40 p-6 sm:p-10">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] mx-auto flex items-center justify-center shadow-lg relative">
@@ -79,11 +79,6 @@ const LoginPage = () => {
             Al continuar, aceptas nuestros términos y condiciones
           </p>
         </div>
-
-        {/* mini footer */}
-        <p className="text-center text-xs text-[#A17C6B]/70 mt-3 sm:mt-6">
-          © {new Date().getFullYear()} Garden Manager
-        </p>
       </div>
     </div>
   );
