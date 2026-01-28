@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
-import { IoLeafOutline, IoAlertCircleOutline } from 'react-icons/io5';
-import { PiPlantFill } from 'react-icons/pi';
-import Button from '../components/Button';
+import React, { useState } from "react";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../config/firebase";
+import { IoLeafOutline, IoAlertCircleOutline } from "react-icons/io5";
+import { PiPlantFill } from "react-icons/pi";
+import Button from "../components/Button";
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
@@ -23,54 +23,67 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-gradient-to-br from-[#E0F2E9] via-[#E0F2E9] to-[#CEB5A7]/30 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative Elements */}
-      <div className="absolute top-10 left-10 w-32 h-32 bg-[#5B7B7A]/10 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-20 w-40 h-40 bg-[#A17C6B]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-[#CEB5A7]/20 rounded-full blur-2xl animate-pulse delay-500"></div>
-      
+    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-[#E0F2E9] to-[#CEB5A7]/50 flex items-center justify-center px-4 py-6 sm:py-10 relative overflow-hidden">
+      {/* blobs */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#5B7B7A]/15 rounded-full blur-3xl" />
+      <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-[#A17C6B]/15 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 right-1/3 w-44 h-44 bg-[#CEB5A7]/20 rounded-full blur-3xl -translate-y-1/2" />
+
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border-2 border-[#CEB5A7]/30 p-8 sm:p-12">
-          {/* Logo y título */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-[#CEB5A7]/40 p-8 sm:p-10">
+          {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl relative">
-              <PiPlantFill className="w-11 h-11 text-white" />
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#E0F2E9] rounded-lg flex items-center justify-center border-2 border-[#CEB5A7]">
-                <IoLeafOutline className="w-4 h-4 text-[#5B7B7A]" />
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] mx-auto flex items-center justify-center shadow-lg relative">
+              <PiPlantFill className="text-white text-5xl" />
+              <div className="absolute -bottom-2 -right-2 w-9 h-9 bg-white rounded-xl flex items-center justify-center border border-[#CEB5A7]/60 shadow-sm">
+                <IoLeafOutline className="text-[#5B7B7A] text-lg" />
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-[#5B7B7A] mb-3 tracking-tight">Garden Pro</h1>
-            <p className="text-[#A17C6B] font-medium">Tu huerto inteligente en la palma de tu mano</p>
+
+            <h1 className="mt-6 text-4xl sm:text-5xl font-bold text-[#5B7B7A] tracking-tight">
+              Garden Manager
+            </h1>
+            <p className="mt-5 text-sm sm:text-base text-[#A17C6B]">
+              Tu huerto inteligente en la palma de tu mano
+            </p>
           </div>
 
-          {/* Mensaje de error */}
+          {/* Error */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-center gap-3 text-red-600">
-              <IoAlertCircleOutline className="w-5 h-5 shrink-0" />
-              <span className="text-sm font-medium">{error}</span>
+            <div className="mb-5 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 flex gap-3 items-start">
+              <IoAlertCircleOutline className="text-xl shrink-0 mt-0.5" />
+              <p className="text-sm font-medium leading-snug">{error}</p>
             </div>
           )}
 
-          {/* Botón de Google */}
-          <Button 
-            onClick={handleGoogleLogin} 
-            loading={loading}
-            icon={() => (
-              <img 
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-                className="w-5 h-5" 
-                alt="Google" 
-              />
-            )}
-          >
-            Continuar con Google
-          </Button>
+          {/* Button */}
+          <div className="w-full">
+            <Button
+              onClick={handleGoogleLogin}
+              loading={loading}
+              className="w-full"
+              icon={() => (
+                <img
+                  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                  className="w-5 h-5"
+                  alt=""
+                />
+              )}
+            >
+              Continuar con Google
+            </Button>
+          </div>
 
           {/* Footer */}
-          <p className="text-center text-xs text-[#A17C6B] mt-8 leading-relaxed">
+          <p className="mt-6 text-center text-xs text-[#A17C6B]/90 leading-relaxed">
             Al continuar, aceptas nuestros términos y condiciones
           </p>
         </div>
+
+        {/* mini footer */}
+        <p className="text-center text-xs text-[#A17C6B]/70 mt-6">
+          © {new Date().getFullYear()} Garden Manager
+        </p>
       </div>
     </div>
   );
