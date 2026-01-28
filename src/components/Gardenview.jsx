@@ -179,11 +179,10 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete }) => {
                         key={`${rowIndex}-${colIndex}`}
                         onClick={() => handleCellClick(rowIndex, colIndex)}
                         disabled={savingCell}
-                        className={`rounded-lg border-2 transition-all relative group ${
-                          hasPlant
+                        className={`rounded-lg border-2 transition-all relative group ${hasPlant
                             ? 'border-2 hover:shadow-lg'
-                            : 'bg-[#E0F2E9] border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-white'
-                        } ${savingCell ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'
+                          } ${savingCell ? 'opacity-60 cursor-not-allowed' : ''}`}
                         style={{
                           width: cellSize,
                           height: cellSize,
@@ -321,9 +320,8 @@ const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
             <button
               onClick={onClose}
               disabled={saving}
-              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${
-                saving ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             >
               <IoClose className="w-5 h-5 text-[#5B7B7A]" />
             </button>
@@ -422,9 +420,8 @@ const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
                 type="button"
                 onClick={onRemove}
                 disabled={saving}
-                className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${
-                  saving ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+                className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
               >
                 Eliminar
               </button>
@@ -433,18 +430,16 @@ const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
               type="button"
               onClick={onClose}
               disabled={saving}
-              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${
-                saving ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving || !selectedCategory || !selectedType}
-              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${
-                (saving || !selectedCategory || !selectedType) ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${(saving || !selectedCategory || !selectedType) ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             >
               Guardar
             </button>

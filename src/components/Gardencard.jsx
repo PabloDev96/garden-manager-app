@@ -70,7 +70,7 @@ const GardenCard = ({ garden, onClick }) => {
               return (
                 <div
                   key={`${rowIndex}-${colIndex}`}
-                  className={`rounded-sm border transition-all relative overflow-hidden ${hasPlant ? 'border-0' : 'bg-white border-[#CEB5A7]/50'
+                  className={`rounded-sm border transition-all relative overflow-hidden ${hasPlant ? 'border-0' : 'bg-[#CEB5A7] border-[#5B7B7A]'
                     }`}
                   style={{
                     width: cellSize,
