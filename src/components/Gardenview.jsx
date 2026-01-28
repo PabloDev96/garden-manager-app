@@ -14,6 +14,7 @@ import useCellSize from '../utils/calculateCellSize';
 // Use cases
 import addCropUseCase from '../services/gardens/addCropUseCase';
 import removeCropUseCase from '../services/gardens/removeCropUseCase';
+import { CROPS_DATABASE } from '../utils/cropsDatabase';
 
 const GardenView = ({ uid, garden, onClose, onUpdate, onDelete }) => {
   const [selectedCell, setSelectedCell] = useState(null);
@@ -167,38 +168,76 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete }) => {
                 }}
               >
                 {garden.plants.map((row, rowIndex) => (
-                  row.map((plant, colIndex) => (
-                    <button
-                      key={`${rowIndex}-${colIndex}`}
-                      onClick={() => handleCellClick(rowIndex, colIndex)}
-                      disabled={savingCell}
-                      className={`rounded-lg border-2 transition-all relative group ${plant
-                          ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] border-[#5B7B7A] hover:shadow-lg'
-                          : 'bg-[#E0F2E9] border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-white'
+                  row.map((plant, colIndex) => {
+                    const hasPlant = plant !== null;
+                    const plantInfo = hasPlant && plant.category && plant.type
+                      ? CROPS_DATABASE[plant.category]?.types[plant.type]
+                      : null;
+
+                    return (
+                      <button
+                        key={`${rowIndex}-${colIndex}`}
+                        onClick={() => handleCellClick(rowIndex, colIndex)}
+                        disabled={savingCell}
+                        className={`rounded-lg border-2 transition-all relative group ${
+                          hasPlant
+                            ? 'border-2 hover:shadow-lg'
+                            : 'bg-[#E0F2E9] border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-white'
                         } ${savingCell ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      style={{ width: cellSize, height: cellSize }}
-                      title={`Parcela ${rowIndex}, ${colIndex}`}
-                    >
-                      {plant ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
-                          <IoLeafOutline className="text-white mb-0.5" style={{ width: Math.min(16, cellSize * 0.5), height: Math.min(16, cellSize * 0.5) }} />
-                          <p
-                            className="text-[10px] text-white font-bold truncate w-full text-center leading-none"
-                            style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
-                          >
-                            {plant.name}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <IoAddOutline className="text-[#5B7B7A]" style={{ width: Math.min(18, cellSize * 0.6), height: Math.min(18, cellSize * 0.6) }} />
-                        </div>
-                      )}
-                      <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">
-                        {rowIndex},{colIndex}
-                      </span>
-                    </button>
-                  ))
+                        style={{
+                          width: cellSize,
+                          height: cellSize,
+                          backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
+                          borderColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined)
+                        }}
+                        title={`Parcela ${rowIndex}, ${colIndex}`}
+                      >
+                        {hasPlant ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
+                            {plantInfo ? (
+                              <>
+                                <span
+                                  className="mb-0.5"
+                                  style={{ fontSize: Math.min(cellSize * 0.5, 32) }}
+                                >
+                                  {plantInfo.emoji}
+                                </span>
+                                <p
+                                  className="text-white font-bold truncate w-full text-center leading-none drop-shadow-md"
+                                  style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
+                                >
+                                  {plantInfo.name}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <IoLeafOutline
+                                  className="text-white mb-0.5"
+                                  style={{ width: Math.min(16, cellSize * 0.5), height: Math.min(16, cellSize * 0.5) }}
+                                />
+                                <p
+                                  className="text-[10px] text-white font-bold truncate w-full text-center leading-none"
+                                  style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
+                                >
+                                  {plant.name}
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <IoAddOutline
+                              className="text-[#5B7B7A]"
+                              style={{ width: Math.min(18, cellSize * 0.6), height: Math.min(18, cellSize * 0.6) }}
+                            />
+                          </div>
+                        )}
+                        <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">
+                          {rowIndex},{colIndex}
+                        </span>
+                      </button>
+                    );
+                  })
                 ))}
               </div>
             </div>
@@ -224,27 +263,52 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete }) => {
   );
 };
 
-// Plant Modal Component
+// Plant Modal Component with Category Selection
 const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
+  const [selectedCategory, setSelectedCategory] = useState(plant?.category || '');
+  const [selectedType, setSelectedType] = useState(plant?.type || '');
   const [formData, setFormData] = useState({
-    name: plant?.name || '',
-    type: plant?.type || 'vegetable',
     plantedDate: plant?.plantedDate || new Date().toISOString().split('T')[0],
     wateringDays: plant?.wateringDays || 3
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({
-      ...formData,
-      id: plant?.id || Date.now().toString()
-    });
+
+    if (!selectedCategory || !selectedType) {
+      alert('Por favor selecciona categoría y tipo de planta');
+      return;
+    }
+
+    const plantInfo = CROPS_DATABASE[selectedCategory].types[selectedType];
+
+    const plantData = {
+      id: plant?.id || Date.now().toString(),
+      category: selectedCategory,
+      type: selectedType,
+      name: plantInfo.name,
+      emoji: plantInfo.emoji,
+      color: plantInfo.color,
+      plantedDate: formData.plantedDate,
+      wateringDays: formData.wateringDays
+    };
+
+    onSave(plantData);
   };
 
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+    setSelectedType(''); // Reset type when category changes
+  };
+
+  const currentPlantInfo = selectedType && selectedCategory
+    ? CROPS_DATABASE[selectedCategory].types[selectedType]
+    : null;
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full">
-        <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6">
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-[#5B7B7A]">
@@ -257,47 +321,70 @@ const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
             <button
               onClick={onClose}
               disabled={saving}
-              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${
+                saving ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
             >
               <IoClose className="w-5 h-5 text-[#5B7B7A]" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Category Selection */}
           <div>
             <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
-              Nombre de la planta
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              placeholder="Ej: Tomate Cherry"
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all"
-              disabled={saving}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
-              Tipo de cultivo
+              Categoría
             </label>
             <select
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all"
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base"
+              required
               disabled={saving}
             >
-              <option value="vegetable">🥬 Verdura</option>
-              <option value="fruit">🍅 Fruta</option>
-              <option value="herb">🌿 Hierba aromática</option>
-              <option value="flower">🌸 Flor</option>
+              <option value="">Selecciona una categoría</option>
+              {Object.entries(CROPS_DATABASE).map(([key, data]) => (
+                <option key={key} value={key}>
+                  {data.emoji} {data.label}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Type Selection */}
+          {selectedCategory && (
+            <div className="animate-fadeIn">
+              <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
+                Tipo de {CROPS_DATABASE[selectedCategory].label}
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(CROPS_DATABASE[selectedCategory].types).map(([key, plantType]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedType(key)}
+                    disabled={saving}
+                    className={`
+                      p-4 rounded-xl border-2 transition-all duration-200 text-left
+                      ${selectedType === key
+                        ? 'border-[#5B7B7A] bg-[#E0F2E9] shadow-md scale-105'
+                        : 'border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-[#E0F2E9]/30'
+                      }
+                      ${saving ? 'opacity-60 cursor-not-allowed' : ''}
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">{plantType.emoji}</span>
+                      <span className="font-medium text-gray-800">{plantType.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Planting Date */}
           <div>
             <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
               Fecha de plantación
@@ -311,6 +398,7 @@ const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
             />
           </div>
 
+          {/* Watering Days */}
           <div>
             <label className="block text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2">
               <IoWaterOutline className="w-5 h-5" />
@@ -327,14 +415,16 @@ const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
             />
           </div>
 
+          {/* Buttons */}
           <div className="flex gap-3 pt-4">
             {onRemove && (
               <button
                 type="button"
                 onClick={onRemove}
                 disabled={saving}
-                className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
+                className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${
+                  saving ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
               >
                 Eliminar
               </button>
@@ -343,16 +433,18 @@ const PlantModal = ({ plant, position, saving, onClose, onSave, onRemove }) => {
               type="button"
               onClick={onClose}
               disabled={saving}
-              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${
+                saving ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              disabled={saving}
-              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+              disabled={saving || !selectedCategory || !selectedType}
+              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${
+                (saving || !selectedCategory || !selectedType) ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
             >
               Guardar
             </button>

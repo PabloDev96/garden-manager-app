@@ -1,11 +1,16 @@
 import React from 'react';
 import { IoGridOutline, IoResizeOutline, IoCalendarOutline } from 'react-icons/io5';
 import useCellSize from '../utils/calculateCellSize';
+import { CROPS_DATABASE } from '../utils/cropsDatabase';
 
 const GardenCard = ({ garden, onClick }) => {
   const totalPlots = garden.grid.rows * garden.grid.columns;
   const filledPlots = garden.plants.flat().filter(plant => plant !== null).length;
   const fillPercentage = ((filledPlots / totalPlots) * 100).toFixed(0);
+
+  const createdAtDate =
+    garden?.createdAt?.toDate?.() ??
+    (garden?.createdAt ? new Date(garden.createdAt) : null);
 
   const previewRows = Math.min(garden.grid.rows, 8);
   const previewCols = Math.min(garden.grid.columns, 8);
@@ -54,30 +59,38 @@ const GardenCard = ({ garden, onClick }) => {
         >
           {Array(previewRows).fill(null).map((_, rowIndex) => (
             Array(previewCols).fill(null).map((_, colIndex) => {
-              const hasPlant = garden.plants[rowIndex]?.[colIndex] !== null;
+              const plant = garden.plants?.[rowIndex]?.[colIndex] ?? null;
+              const hasPlant = plant !== null;
+
+              const plantInfo =
+                hasPlant && plant?.category && plant?.type
+                  ? CROPS_DATABASE[plant.category]?.types?.[plant.type]
+                  : null;
+
               return (
                 <div
                   key={`${rowIndex}-${colIndex}`}
-                  className={`rounded-sm transition-all ${
-                    hasPlant
-                      ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B]'
-                      : 'bg-white border border-[#CEB5A7]/50'
-                  }`}
+                  className={`rounded-sm border transition-all relative overflow-hidden ${hasPlant ? 'border-0' : 'bg-white border-[#CEB5A7]/50'
+                    }`}
                   style={{
                     width: cellSize,
                     height: cellSize,
+                    backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
                   }}
-                />
+                  title={plantInfo?.name || plant?.name || 'Vacío'}
+                >
+                  {hasPlant && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span style={{ fontSize: Math.min(cellSize * 0.7, 22) }}>
+                        {plantInfo?.emoji || plant?.emoji || '🌱'}
+                      </span>
+                    </div>
+                  )}
+                </div>
               );
             })
           ))}
         </div>
-
-        {(garden.grid.rows > 8 || garden.grid.columns > 8) && (
-          <p className="text-xs text-[#A17C6B] text-center mt-2">
-            Vista previa (máximo 8×8)
-          </p>
-        )}
       </div>
 
       {/* Stats */}
@@ -120,11 +133,13 @@ const GardenCard = ({ garden, onClick }) => {
       <div className="flex items-center gap-2 text-xs text-[#A17C6B]">
         <IoCalendarOutline className="w-4 h-4" />
         <span>
-          Creado {new Date(garden.createdAt).toLocaleDateString('es-ES', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-          })}
+          {createdAtDate
+            ? `Creado ${createdAtDate.toLocaleDateString('es-ES', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })}`
+            : 'Creado —'}
         </span>
       </div>
     </div>
