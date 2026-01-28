@@ -13,4 +13,7 @@ html, body, #root {
 
 body {
   margin: 0;
+  padding: 0;
+  display: block;
+  overflow-x: hidden;
 }

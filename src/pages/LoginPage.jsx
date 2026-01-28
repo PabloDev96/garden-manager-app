@@ -23,7 +23,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-[#E0F2E9] to-[#CEB5A7]/50 flex items-center justify-center px-4 py-6 sm:py-10 relative overflow-hidden">
+    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-[#E0F2E9] to-[#CEB5A7]/50 flex justify-center px-4 py-6 sm:py-10 sm:items-center relative overflow-hidden">
       {/* blobs */}
       <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#5B7B7A]/15 rounded-full blur-3xl" />
       <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-[#A17C6B]/15 rounded-full blur-3xl" />
@@ -81,7 +81,7 @@ const LoginPage = () => {
         </div>
 
         {/* mini footer */}
-        <p className="text-center text-xs text-[#A17C6B]/70 mt-6">
+        <p className="hidden sm:block text-center text-xs text-[#A17C6B]/70 mt-6">
           © {new Date().getFullYear()} Garden Manager
         </p>
       </div>
