@@ -17,8 +17,9 @@ import {
 } from 'react-icons/io5';
 
 import GardenModal from '../components/GardenModal';
-import GardenCard from '../components/GardenCard';
-import GardenView from '../components/GardenView';
+import GardenCard from '../components/Gardencard';
+import GardenView from '../components/Gardenview';
+import getGardenTotalsUseCase from '../services/gardens/getGardenTotalUseCase';
 
 // Use cases
 import subscribeGardensUseCase from '../services/gardens/subscribeGardensUseCase';
@@ -32,6 +33,7 @@ const Dashboard = ({ user }) => {
   const [showGardenModal, setShowGardenModal] = useState(false);
   const [selectedGarden, setSelectedGarden] = useState(null);
   const [loadingGardens, setLoadingGardens] = useState(true);
+  const [gardenTotalsMap, setGardenTotalsMap] = useState({});
 
   const uid = user?.uid;
 
@@ -43,16 +45,34 @@ const Dashboard = ({ user }) => {
 
     const unsub = subscribeGardensUseCase(
       uid,
-      (items) => {
+      async (items) => {
         setGardens(items);
         setLoadingGardens(false);
 
-        // ✅ IMPORTANTE: usar actualización funcional para evitar closure/stale state
+        // mantener selectedGarden actualizado
         setSelectedGarden((prev) => {
           if (!prev) return prev;
           const updated = items.find((g) => g.id === prev.id);
           return updated ?? prev;
         });
+
+        // ✅ cargar totales para las cards (1 vez por huerto)
+        try {
+          const pairs = await Promise.all(
+            items.map(async (g) => {
+              const totals = await getGardenTotalsUseCase(uid, g.id);
+              return [g.id, totals];
+            })
+          );
+
+          setGardenTotalsMap((prev) => {
+            const next = { ...prev };
+            for (const [id, totals] of pairs) next[id] = totals;
+            return next;
+          });
+        } catch (e) {
+          console.error('Error cargando totales de huertos:', e);
+        }
       },
       (err) => {
         console.error('Error cargando huertos:', err);
@@ -109,6 +129,14 @@ const Dashboard = ({ user }) => {
         onClose={() => setSelectedGarden(null)}
         onUpdate={handleUpdateGarden}
         onDelete={handleDeleteGarden}
+
+        // para actualizar GardenCard al volver atrás desde GardenView
+        onTotalsUpdate={(gardenId, totals) => {
+          setGardenTotalsMap((prev) => ({
+            ...prev,
+            [gardenId]: totals,
+          }));
+        }}
       />
     );
   }
@@ -268,7 +296,10 @@ const Dashboard = ({ user }) => {
                 {gardens.map((garden) => (
                   <GardenCard
                     key={garden.id}
-                    garden={garden}
+                    garden={{
+                      ...garden,
+                      totals: gardenTotalsMap[garden.id] ?? { totalUnits: 0, totalGrams: 0 },
+                    }}
                     onClick={handleOpenGarden}
                   />
                 ))}
