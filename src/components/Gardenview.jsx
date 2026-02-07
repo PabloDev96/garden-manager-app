@@ -58,8 +58,8 @@ const AutoNoticeModal = ({ notice }) => {
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
       <div
         className={`w-full max-w-sm bg-white rounded-2xl border-2 shadow-xl p-5 text-center transform transition-all duration-300 ease-out ${isVisible
-          ? 'opacity-100 scale-100 translate-y-0'
-          : 'opacity-0 scale-95 -translate-y-4'
+            ? 'opacity-100 scale-100 translate-y-0'
+            : 'opacity-0 scale-95 -translate-y-4'
           } ${isDanger ? 'border-red-200' : 'border-[#CEB5A7]/40'}`}
       >
         <h4 className="text-lg font-bold text-[#5B7B7A]">{currentNotice.title}</h4>
@@ -471,8 +471,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
           {/* Grid */}
           <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
-            <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2">
+            <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">           
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
                 {/* Botón Plantar Todo */}
                 {emptyCells > 0 && (
                   <button
@@ -497,7 +497,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   </button>
                 )}
               </div>
-              <p className="text-sm text-[#A17C6B]">Click en cada parcela para gestionarla</p>
+              <p className="text-sm text-[#A17C6B] text-center sm:text-left">Click en cada parcela para gestionarla</p>
             </div>
 
             <div className="overflow-x-auto">
@@ -627,21 +627,21 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           onClick={() => setShowDeleteAllConfirm(false)}
         >
           <div
-            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5"
+            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-4 sm:p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              <h4 className="text-lg font-bold text-[#5B7B7A]">Eliminar todos los cultivos</h4>
-              <p className="text-sm text-[#A17C6B] mt-2">
+              <h4 className="text-base sm:text-lg font-bold text-[#5B7B7A]">Eliminar todos los cultivos</h4>
+              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">
                 Se eliminarán {plantedCells} cultivos. ¿Qué quieres hacer con el historial?
               </p>
             </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-3">
+            <div className="mt-4 sm:mt-5 grid grid-cols-1 gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setShowDeleteAllConfirm(false)}
-                className="w-full px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold cursor-pointer"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer"
                 disabled={processingBulk}
               >
                 Cancelar
@@ -650,7 +650,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={() => handleDeleteAll(false)}
-                className="w-full px-4 py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold cursor-pointer"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold text-sm sm:text-base cursor-pointer"
                 disabled={processingBulk}
               >
                 Eliminar cultivos
@@ -659,7 +659,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={() => handleDeleteAll(true)}
-                className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold cursor-pointer"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold text-sm sm:text-base cursor-pointer"
                 disabled={processingBulk}
               >
                 Eliminar cultivos + historial
@@ -676,21 +676,21 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           onClick={() => setShowDeleteGardenConfirm(false)}
         >
           <div
-            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5"
+            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-4 sm:p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              <h4 className="text-lg font-bold text-[#5B7B7A]">Eliminar huerto</h4>
-              <p className="text-sm text-[#A17C6B] mt-2">
+              <h4 className="text-base sm:text-lg font-bold text-[#5B7B7A]">Eliminar huerto</h4>
+              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">
                 ¿Seguro que quieres eliminar este huerto?
               </p>
             </div>
 
-            <div className="mt-5 flex gap-3">
+            <div className="mt-4 sm:mt-5 flex gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setShowDeleteGardenConfirm(false)}
-                className="flex-1 px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold cursor-pointer"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer"
                 disabled={deletingGarden}
               >
                 Cancelar
@@ -698,7 +698,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={confirmDeleteGarden}
-                className="flex-1 px-4 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold cursor-pointer"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold text-sm sm:text-base cursor-pointer"
                 disabled={deletingGarden}
               >
                 Eliminar
@@ -759,13 +759,13 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6">
-          <div className="relative flex items-start justify-between gap-4">
-            <div className="w-10 h-10 shrink-0" />
+        <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-4 sm:p-6">
+          <div className="relative flex items-start justify-between gap-2 sm:gap-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0" />
 
             <div className="flex-1 min-w-0 text-center">
-              <h3 className="text-xl font-bold text-[#5B7B7A]">Plantar en todas las parcelas vacías</h3>
-              <p className="text-sm text-[#A17C6B]">
+              <h3 className="text-lg sm:text-xl font-bold text-[#5B7B7A]">Plantar en todas las parcelas vacías</h3>
+              <p className="text-xs sm:text-sm text-[#A17C6B] mt-1">
                 Se plantarán {emptyCells} parcelas
               </p>
             </div>
@@ -773,23 +773,24 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
             <button
               onClick={onClose}
               disabled={processing}
-              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-                }`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${
+                processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+              }`}
               aria-label="Cerrar"
             >
-              <IoClose className="w-5 h-5 text-[#5B7B7A]" />
+              <IoClose className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" />
             </button>
           </div>
         </div>
 
         {/* BODY */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div>
-            <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
+            <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
             <select
               value={selectedCategory}
               onChange={handleCategoryChange}
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base cursor-pointer"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-sm sm:text-base cursor-pointer"
               required
               disabled={processing}
             >
@@ -804,26 +805,26 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
 
           {selectedCategory && (
             <div className="animate-fadeIn">
-              <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">
                 Tipo de {CROPS_DATABASE[selectedCategory].label}
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {Object.entries(CROPS_DATABASE[selectedCategory].types).map(([key, plantType]) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setSelectedType(key)}
                     disabled={processing}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left
                       ${selectedType === key
                         ? 'border-[#5B7B7A] bg-[#E0F2E9] shadow-md scale-105'
                         : 'border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-[#E0F2E9]/30'
                       }
                       ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-4xl">{plantType.emoji}</span>
-                      <span className="font-medium text-gray-800">{plantType.name}</span>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="text-2xl sm:text-4xl">{plantType.emoji}</span>
+                      <span className="font-medium text-gray-800 text-xs sm:text-base">{plantType.name}</span>
                     </div>
                   </button>
                 ))}
@@ -832,19 +833,19 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
           )}
 
           <div>
-            <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Fecha de plantación</label>
+            <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Fecha de plantación</label>
             <input
               type="date"
               value={formData.plantedDate}
               onChange={(e) => setFormData({ ...formData, plantedDate: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer text-sm sm:text-base"
               disabled={processing}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2">
-              <IoWaterOutline className="w-5 h-5" />
+            <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2">
+              <IoWaterOutline className="w-4 h-4 sm:w-5 sm:h-5" />
               Riego cada (días)
             </label>
             <input
@@ -853,21 +854,22 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               onChange={(e) => setFormData({ ...formData, wateringDays: parseInt(e.target.value, 10) })}
               min="1"
               max="30"
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer text-sm sm:text-base"
               disabled={processing}
             />
           </div>
         </form>
 
         {/* FOOTER */}
-        <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-4">
-          <div className="flex gap-3">
+        <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-3 sm:p-4">
+          <div className="flex gap-2 sm:gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={processing}
-              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-                }`}
+              className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base ${
+                processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+              }`}
             >
               Cancelar
             </button>
@@ -876,10 +878,11 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               type="submit"
               onClick={handleSubmit}
               disabled={processing || !selectedCategory || !selectedType}
-              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${processing || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-                }`}
+              className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold text-sm sm:text-base ${
+                processing || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+              }`}
             >
-              {processing ? 'Plantando...' : `Plantar ${emptyCells} parcelas`}
+              {processing ? 'Plantando...' : `Plantar ${emptyCells}`}
             </button>
           </div>
         </div>
@@ -1052,7 +1055,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
       aria-modal="true"
     >
       <div
-        className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-3xl max-w-2xl w-full max-h-[90dvh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
@@ -1325,7 +1328,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                           ${saving ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-4xl">{plantType.emoji}</span>
+                          <span className="text-2xl">{plantType.emoji}</span>
                           <span className="font-medium text-gray-800">{plantType.name}</span>
                         </div>
                       </button>
@@ -1405,16 +1408,6 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                   Eliminar
                 </button>
               )}
-
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={saving}
-                className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
-              >
-                Cancelar
-              </button>
 
               <button
                 type="submit"
