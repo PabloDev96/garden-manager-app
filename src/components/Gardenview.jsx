@@ -9,7 +9,6 @@ import {
   IoWaterOutline,
   IoBasketOutline,
   IoScaleOutline,
-  IoCheckmarkCircleOutline,
   IoChevronDownOutline,
   IoChevronUpOutline
 } from 'react-icons/io5';
@@ -1018,7 +1017,6 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                 className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2 ${saving || !harvestData.units ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
               >
-                <IoCheckmarkCircleOutline className="w-5 h-5" />
                 Registrar Cosecha
               </button>
             </div>
