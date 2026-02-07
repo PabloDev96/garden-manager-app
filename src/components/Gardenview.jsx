@@ -99,7 +99,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       notify(
         {
           variant: 'danger',
-          title: 'Huerto eliminado 🗑️',
+          title: 'Huerto eliminado',
           message: 'Se ha eliminado correctamente',
         },
         2300
@@ -162,7 +162,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       notify(
         {
           variant: 'success',
-          title: 'Recolectado ✅',
+          title: 'Recolectado',
           message: `${harvestInfo.units} unidades${harvestInfo.totalGrams ? ` · ${Math.round(harvestInfo.totalGrams)}g` : ''
             }`,
         },
@@ -198,12 +198,12 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       const mode = meta?.mode; // "create" | "edit"
       const title =
         mode === 'create'
-          ? 'Cultivo añadido ✅'
+          ? 'Cultivo añadido'
           : mode === 'edit'
-            ? 'Cultivo editado ✅'
-            : 'Cultivo guardado ✅';
+            ? 'Cultivo editado'
+            : 'Cultivo guardado';
 
-      // ✅ modal auto-cierre cultivo añadido / editado
+      //modal auto-cierre cultivo añadido / editado
       notify(
         {
           variant: 'success',
@@ -246,8 +246,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       // ✅ modal auto-cierre confirmado
       notify(
         options?.deleteHistory
-          ? { variant: 'danger', title: 'Eliminado 🗑️', message: 'Cultivo + historial borrados' }
-          : { variant: 'danger', title: 'Cultivo eliminado 🗑️', message: 'Historial conservado en BD' },
+          ? { variant: 'danger', title: 'Eliminado', message: 'Cultivo + historial borrados' }
+          : { variant: 'danger', title: 'Cultivo eliminado', message: 'Historial conservado en BD' },
         2400
       );
     } catch (e) {
@@ -661,8 +661,8 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
 
       notify?.(
         deleteHistory
-          ? { variant: 'danger', title: 'Eliminado 🗑️', message: 'Cultivo + historial borrados' }
-          : { variant: 'danger', title: 'Cultivo eliminado 🗑️', message: 'Historial conservado en BD' },
+          ? { variant: 'danger', title: 'Eliminado', message: 'Cultivo + historial borrados' }
+          : { variant: 'danger', title: 'Cultivo eliminado', message: 'Historial conservado en BD' },
         2400
       );
     } catch (e) {
