@@ -10,8 +10,9 @@ import {
   IoBasketOutline,
   IoScaleOutline,
   IoChevronDownOutline,
-  IoChevronUpOutline
+  IoChevronUpOutline,
 } from 'react-icons/io5';
+import { GiPlantSeed } from "react-icons/gi";
 
 import useCellSize from '../utils/calculateCellSize';
 
@@ -88,6 +89,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const [showDeleteGardenConfirm, setShowDeleteGardenConfirm] = useState(false);
   const [deletingGarden, setDeletingGarden] = useState(false);
 
+  // ====== PLANTAR TODO / ELIMINAR TODO ======
+  const [showPlantAllModal, setShowPlantAllModal] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [processingBulk, setProcessingBulk] = useState(false);
+
   const confirmDeleteGarden = async () => {
     try {
       setDeletingGarden(true);
@@ -115,6 +121,112 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       );
     } finally {
       setDeletingGarden(false);
+    }
+  };
+
+  // ---- PLANTAR TODO ----
+  const handlePlantAll = async (plantData) => {
+    if (!uid || !garden) return;
+
+    try {
+      setProcessingBulk(true);
+      let plantedCount = 0;
+
+      for (let row = 0; row < garden.grid.rows; row++) {
+        for (let col = 0; col < garden.grid.columns; col++) {
+          const currentPlant = garden.plants[row]?.[col];
+          if (!currentPlant) {
+            const plantId = `${Date.now()}_${row}_${col}_${Math.random().toString(16).slice(2)}`;
+            const newPlant = {
+              ...plantData,
+              id: plantId,
+            };
+            await addCropUseCase(uid, garden.id, row, col, newPlant);
+            plantedCount++;
+          }
+        }
+      }
+
+      setShowPlantAllModal(false);
+
+      notify(
+        {
+          variant: 'success',
+          title: 'Plantación completada',
+          message: `${plantedCount} parcelas plantadas`,
+        },
+        2600
+      );
+    } catch (e) {
+      console.error(e);
+      notify(
+        {
+          variant: 'danger',
+          title: 'Error',
+          message: 'No se pudo completar la plantación',
+        },
+        2600
+      );
+    } finally {
+      setProcessingBulk(false);
+    }
+  };
+
+  // ---- ELIMINAR TODO ----
+  const handleDeleteAll = async (deleteHistory = false) => {
+    if (!uid || !garden) return;
+
+    try {
+      setProcessingBulk(true);
+      let deletedCount = 0;
+      let totalRemovedUnits = 0;
+      let totalRemovedGrams = 0;
+
+      for (let row = 0; row < garden.grid.rows; row++) {
+        for (let col = 0; col < garden.grid.columns; col++) {
+          const currentPlant = garden.plants[row]?.[col];
+          if (currentPlant) {
+            const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(
+              uid,
+              garden.id,
+              row,
+              col,
+              { deleteHistory }
+            );
+            totalRemovedUnits += removedUnits;
+            totalRemovedGrams += removedGrams;
+            deletedCount++;
+          }
+        }
+      }
+
+      setGardenTotals((prev) => ({
+        totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
+        totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
+      }));
+
+      setShowDeleteAllConfirm(false);
+
+      notify(
+        {
+          variant: 'danger',
+          title: 'Plantación eliminada',
+          message: `${deletedCount} cultivos eliminados${deleteHistory ? ' (+ historial)' : ''}`,
+        },
+        2600
+      );
+    } catch (e) {
+      console.error(e);
+      notify(
+        {
+          variant: 'danger',
+          title: 'Error',
+          message: 'No se pudo eliminar la plantación',
+        },
+        2600
+      );
+    } finally {
+      setProcessingBulk(false);
     }
   };
 
@@ -271,6 +383,10 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     min: isMobile ? 14 : 18,
   });
 
+  // Calcular celdas vacías
+  const emptyCells = garden.plants.flat().filter(p => p === null).length;
+  const plantedCells = garden.plants.flat().filter(p => p !== null).length;
+
   return (
     <div className="fixed inset-0 bg-[#E0F2E9] z-50 overflow-y-auto">
       {/* ✅ Notificación auto-cierre global CON ANIMACIONES */}
@@ -279,7 +395,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-[#CEB5A7]/30 sticky top-0 z-10">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-3">
             <div className="flex items-center gap-4">
               <button
                 onClick={onClose}
@@ -298,7 +414,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
             <button
               onClick={() => setShowDeleteGardenConfirm(true)}
-              className="flex items-center gap-2 px-5 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium"
+              disabled={processingBulk}
+              className="flex items-center gap-2 px-5 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium disabled:opacity-60"
             >
               <IoTrashOutline className="w-5 h-5" />
               <span className="hidden sm:inline">Eliminar Huerto</span>
@@ -354,12 +471,33 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
           {/* Grid */}
           <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#5B7B7A] flex items-center gap-2">
-                <IoGridOutline className="w-6 h-6" />
-                Cuadrícula del Huerto
-              </h2>
-              <p className="text-sm text-[#A17C6B]">Click en una parcela para gestionarla</p>
+            <div className="mb-6 flex items-center justify-between flex-wrap gap-3">           
+              <div className="flex items-center gap-2">
+                {/* Botón Plantar Todo */}
+                {emptyCells > 0 && (
+                  <button
+                    onClick={() => setShowPlantAllModal(true)}
+                    disabled={processingBulk}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-medium text-sm disabled:opacity-60"
+                  >
+                    <GiPlantSeed className="w-4 h-4" />
+                    <span>Plantar todo</span>
+                  </button>
+                )}
+
+                {/* Botón Eliminar Todo */}
+                {plantedCells > 0 && (
+                  <button
+                    onClick={() => setShowDeleteAllConfirm(true)}
+                    disabled={processingBulk}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition-all font-medium text-sm disabled:opacity-60"
+                  >
+                    <IoTrashOutline className="w-4 h-4" />
+                    <span>Eliminar todo</span>
+                  </button>
+                )}
+              </div>
+              <p className="text-sm text-[#A17C6B]">Click en cada parcela para gestionarla</p>
             </div>
 
             <div className="overflow-x-auto">
@@ -384,11 +522,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                       <button
                         key={`${rowIndex}-${colIndex}`}
                         onClick={() => handleCellClick(rowIndex, colIndex)}
-                        disabled={savingCell}
+                        disabled={savingCell || processingBulk}
                         className={`rounded-lg border-2 transition-all relative group ${hasPlant
                           ? 'border-2 hover:shadow-lg'
                           : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'
-                          } ${savingCell ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          } ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : ''}`}
                         style={{
                           width: cellSize,
                           height: cellSize,
@@ -472,6 +610,65 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         />
       )}
 
+      {/* ✅ Modal Plantar Todo */}
+      {showPlantAllModal && (
+        <PlantAllModal
+          onClose={() => setShowPlantAllModal(false)}
+          onConfirm={handlePlantAll}
+          processing={processingBulk}
+          emptyCells={emptyCells}
+        />
+      )}
+
+      {/* ✅ Modal Eliminar Todo */}
+      {showDeleteAllConfirm && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setShowDeleteAllConfirm(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <h4 className="text-lg font-bold text-[#5B7B7A]">Eliminar todos los cultivos</h4>
+              <p className="text-sm text-[#A17C6B] mt-2">
+                Se eliminarán {plantedCells} cultivos. ¿Qué quieres hacer con el historial?
+              </p>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteAllConfirm(false)}
+                className="w-full px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold"
+                disabled={processingBulk}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteAll(false)}
+                className="w-full px-4 py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold"
+                disabled={processingBulk}
+              >
+                Eliminar cultivos
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteAll(true)}
+                className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold"
+                disabled={processingBulk}
+              >
+                Eliminar cultivos + historial
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ✅ Modal confirmación eliminar huerto */}
       {showDeleteGardenConfirm && (
         <div
@@ -510,6 +707,186 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// ===================== PlantAllModal =====================
+const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const [formData, setFormData] = useState({
+    plantedDate: new Date().toISOString().split('T')[0],
+    wateringDays: 3,
+  });
+
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+    setSelectedType('');
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!selectedCategory || !selectedType) {
+      return;
+    }
+
+    const plantInfo = CROPS_DATABASE[selectedCategory].types[selectedType];
+
+    const plantData = {
+      category: selectedCategory,
+      type: selectedType,
+      name: plantInfo.name,
+      emoji: plantInfo.emoji,
+      color: plantInfo.color,
+      plantedDate: formData.plantedDate,
+      wateringDays: formData.wateringDays,
+    };
+
+    onConfirm(plantData);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* HEADER */}
+        <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6">
+          <div className="relative flex items-start justify-between gap-4">
+            <div className="w-10 h-10 shrink-0" />
+
+            <div className="flex-1 min-w-0 text-center">
+              <h3 className="text-xl font-bold text-[#5B7B7A]">Plantar en todas las parcelas vacías</h3>
+              <p className="text-sm text-[#A17C6B]">
+                Se plantarán {emptyCells} parcelas
+              </p>
+            </div>
+
+            <button
+              onClick={onClose}
+              disabled={processing}
+              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${
+                processing ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+              aria-label="Cerrar"
+            >
+              <IoClose className="w-5 h-5 text-[#5B7B7A]" />
+            </button>
+          </div>
+        </div>
+
+        {/* BODY */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
+            <select
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base"
+              required
+              disabled={processing}
+            >
+              <option value="">Selecciona una categoría</option>
+              {Object.entries(CROPS_DATABASE).map(([key, data]) => (
+                <option key={key} value={key}>
+                  {data.emoji} {data.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedCategory && (
+            <div className="animate-fadeIn">
+              <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
+                Tipo de {CROPS_DATABASE[selectedCategory].label}
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(CROPS_DATABASE[selectedCategory].types).map(([key, plantType]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedType(key)}
+                    disabled={processing}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left
+                      ${selectedType === key
+                        ? 'border-[#5B7B7A] bg-[#E0F2E9] shadow-md scale-105'
+                        : 'border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-[#E0F2E9]/30'
+                      }
+                      ${processing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">{plantType.emoji}</span>
+                      <span className="font-medium text-gray-800">{plantType.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Fecha de plantación</label>
+            <input
+              type="date"
+              value={formData.plantedDate}
+              onChange={(e) => setFormData({ ...formData, plantedDate: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all"
+              disabled={processing}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2">
+              <IoWaterOutline className="w-5 h-5" />
+              Riego cada (días)
+            </label>
+            <input
+              type="number"
+              value={formData.wateringDays}
+              onChange={(e) => setFormData({ ...formData, wateringDays: parseInt(e.target.value, 10) })}
+              min="1"
+              max="30"
+              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all"
+              disabled={processing}
+            />
+          </div>
+        </form>
+
+        {/* FOOTER */}
+        <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-4">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={processing}
+              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${
+                processing ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={processing || !selectedCategory || !selectedType}
+              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${
+                processing || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              {processing ? 'Plantando...' : `Plantar ${emptyCells} parcelas`}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -747,10 +1124,6 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
             <form id="harvest-form" onSubmit={handleHarvestSubmit} className="p-6 space-y-6">
               <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-2 border-[#CEB5A7]/50 rounded-2xl p-6">
                 <div className="text-center mb-4">
-                  <div className="text-6xl mb-3">{currentPlantInfo?.emoji || plant.emoji}</div>
-                  <h4 className="text-2xl font-bold text-[#5B7B7A] mb-2">
-                    {currentPlantInfo?.name || plant.name}
-                  </h4>
                   <p className="text-sm text-[#A17C6B]">
                     Plantado el {new Date(plant.plantedDate).toLocaleDateString('es-ES')}
                   </p>
@@ -1100,7 +1473,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                   className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold"
                   disabled={saving}
                 >
-                  Eliminar cultivo + historial BD
+                  Eliminar cultivo + historial
                 </button>
               </div>
             </div>
