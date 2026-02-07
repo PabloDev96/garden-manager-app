@@ -58,8 +58,8 @@ const AutoNoticeModal = ({ notice }) => {
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
       <div
         className={`w-full max-w-sm bg-white rounded-2xl border-2 shadow-xl p-5 text-center transform transition-all duration-300 ease-out ${isVisible
-            ? 'opacity-100 scale-100 translate-y-0'
-            : 'opacity-0 scale-95 -translate-y-4'
+          ? 'opacity-100 scale-100 translate-y-0'
+          : 'opacity-0 scale-95 -translate-y-4'
           } ${isDanger ? 'border-red-200' : 'border-[#CEB5A7]/40'}`}
       >
         <h4 className="text-lg font-bold text-[#5B7B7A]">{currentNotice.title}</h4>
@@ -399,7 +399,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
             <div className="flex items-center gap-4">
               <button
                 onClick={onClose}
-                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all"
+                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all cursor-pointer"
               >
                 <IoArrowBackOutline className="w-6 h-6 text-white" />
               </button>
@@ -415,7 +415,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
             <button
               onClick={() => setShowDeleteGardenConfirm(true)}
               disabled={processingBulk}
-              className="flex items-center gap-2 px-5 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium disabled:opacity-60"
+              className="flex items-center gap-2 px-5 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               <IoTrashOutline className="w-5 h-5" />
               <span className="hidden sm:inline">Eliminar Huerto</span>
@@ -471,14 +471,14 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
           {/* Grid */}
           <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
-            <div className="mb-6 flex items-center justify-between flex-wrap gap-3">           
+            <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 {/* Botón Plantar Todo */}
                 {emptyCells > 0 && (
                   <button
                     onClick={() => setShowPlantAllModal(true)}
                     disabled={processingBulk}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-medium text-sm disabled:opacity-60"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <GiPlantSeed className="w-4 h-4" />
                     <span>Plantar todo</span>
@@ -490,7 +490,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   <button
                     onClick={() => setShowDeleteAllConfirm(true)}
                     disabled={processingBulk}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition-all font-medium text-sm disabled:opacity-60"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <IoTrashOutline className="w-4 h-4" />
                     <span>Eliminar todo</span>
@@ -526,7 +526,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                         className={`rounded-lg border-2 transition-all relative group ${hasPlant
                           ? 'border-2 hover:shadow-lg'
                           : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'
-                          } ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          } ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                         style={{
                           width: cellSize,
                           height: cellSize,
@@ -599,7 +599,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           plant={currentPlant}
           position={selectedCell}
           saving={savingCell}
-          notify={notify} // ✅ para modales auto-cierre desde dentro
+          notify={notify}
           onClose={() => {
             setShowPlantModal(false);
             setSelectedCell(null);
@@ -641,7 +641,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={() => setShowDeleteAllConfirm(false)}
-                className="w-full px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold"
+                className="w-full px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold cursor-pointer"
                 disabled={processingBulk}
               >
                 Cancelar
@@ -650,7 +650,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={() => handleDeleteAll(false)}
-                className="w-full px-4 py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold"
+                className="w-full px-4 py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold cursor-pointer"
                 disabled={processingBulk}
               >
                 Eliminar cultivos
@@ -659,7 +659,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={() => handleDeleteAll(true)}
-                className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold"
+                className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold cursor-pointer"
                 disabled={processingBulk}
               >
                 Eliminar cultivos + historial
@@ -690,7 +690,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={() => setShowDeleteGardenConfirm(false)}
-                className="flex-1 px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold"
+                className="flex-1 px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold cursor-pointer"
                 disabled={deletingGarden}
               >
                 Cancelar
@@ -698,7 +698,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <button
                 type="button"
                 onClick={confirmDeleteGarden}
-                className="flex-1 px-4 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold"
+                className="flex-1 px-4 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold cursor-pointer"
                 disabled={deletingGarden}
               >
                 Eliminar
@@ -773,9 +773,8 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
             <button
               onClick={onClose}
               disabled={processing}
-              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${
-                processing ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
               aria-label="Cerrar"
             >
               <IoClose className="w-5 h-5 text-[#5B7B7A]" />
@@ -790,7 +789,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
             <select
               value={selectedCategory}
               onChange={handleCategoryChange}
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base"
+              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base cursor-pointer"
               required
               disabled={processing}
             >
@@ -820,7 +819,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
                         ? 'border-[#5B7B7A] bg-[#E0F2E9] shadow-md scale-105'
                         : 'border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-[#E0F2E9]/30'
                       }
-                      ${processing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-4xl">{plantType.emoji}</span>
@@ -838,7 +837,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               type="date"
               value={formData.plantedDate}
               onChange={(e) => setFormData({ ...formData, plantedDate: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all"
+              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer"
               disabled={processing}
             />
           </div>
@@ -854,7 +853,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               onChange={(e) => setFormData({ ...formData, wateringDays: parseInt(e.target.value, 10) })}
               min="1"
               max="30"
-              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all"
+              className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer"
               disabled={processing}
             />
           </div>
@@ -867,9 +866,8 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               type="button"
               onClick={onClose}
               disabled={processing}
-              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${
-                processing ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
             >
               Cancelar
             </button>
@@ -878,9 +876,8 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               type="submit"
               onClick={handleSubmit}
               disabled={processing || !selectedCategory || !selectedType}
-              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${
-                processing || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${processing || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
             >
               {processing ? 'Plantando...' : `Plantar ${emptyCells} parcelas`}
             </button>
