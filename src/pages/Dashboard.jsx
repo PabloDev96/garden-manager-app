@@ -259,16 +259,19 @@ const Dashboard = ({ user }) => {
 
           {/* Main Section - Huertos */}
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-3 sm:gap-4 text-center sm:text-left">
 
               <h2 className="text-3xl font-bold text-[#5B7B7A]">
                 Mis Huertos
               </h2>
 
               <AppTooltip content="Nuevo Huerto">
-                <button className="flex items-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-4 py-2.5 rounded-xl hover:shadow-xl transition-all font-bold">
-                  <IoAddOutline className="w-5 h-5" />
-                  <PiPlant className="w-5 h-5" />
+                <button className="group flex items-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-4 py-2.5 rounded-xl hover:shadow-xl transition-all font-bold">
+                  {/* Icono + → gira */}
+                  <IoAddOutline className="w-5 h-5 transition-transform duration-300 ease-out group-hover:rotate-90 group-hover:scale-110" />
+
+                  {/* Icono planta → solo scale */}
+                  <PiPlant className="w-5 h-5 transition-transform duration-300 ease-out group-hover:scale-110" />
                 </button>
               </AppTooltip>
 
@@ -297,21 +300,21 @@ const Dashboard = ({ user }) => {
                 </button>
               </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {gardens.map((garden) => (
-                    <AppTooltip key={garden.id} content="Ver detalles">
-                      <div className="w-full">
-                        <GardenCard
-                          garden={{
-                            ...garden,
-                            totals: gardenTotalsMap[garden.id] ?? { totalUnits: 0, totalGrams: 0 },
-                          }}
-                          onClick={handleOpenGarden}
-                        />
-                      </div>
-                    </AppTooltip>
-                  ))}
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {gardens.map((garden) => (
+                  <AppTooltip key={garden.id} content="Ver detalles">
+                    <div className="w-full">
+                      <GardenCard
+                        garden={{
+                          ...garden,
+                          totals: gardenTotalsMap[garden.id] ?? { totalUnits: 0, totalGrams: 0 },
+                        }}
+                        onClick={handleOpenGarden}
+                      />
+                    </div>
+                  </AppTooltip>
+                ))}
+              </div>
             )}
           </div>
 

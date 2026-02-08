@@ -14,6 +14,7 @@ import {
 } from 'react-icons/io5';
 import { GiPlantSeed } from "react-icons/gi";
 
+import AppTooltip from "../components/AppTooltip";
 import useCellSize from '../utils/calculateCellSize';
 
 // Use cases
@@ -412,14 +413,15 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               </div>
             </div>
 
-            <button
-              onClick={() => setShowDeleteGardenConfirm(true)}
-              disabled={processingBulk}
-              className="flex items-center gap-2 px-5 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <IoTrashOutline className="w-5 h-5" />
-              <span className="hidden sm:inline">Eliminar Huerto</span>
-            </button>
+            <AppTooltip content="Eliminar Huerto">
+              <button
+                onClick={() => setShowDeleteGardenConfirm(true)}
+                disabled={processingBulk}
+                className="flex items-center gap-2 px-3 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <IoTrashOutline className="w-5 h-5" />
+              </button>
+            </AppTooltip>
           </div>
         </div>
       </header>
@@ -471,8 +473,9 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
           {/* Grid */}
           <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
-            <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+            <div className="mb-6 flex flex-col items-center justify-center gap-3">
+              {/* Botones centrados */}
+              <div className="flex flex-wrap items-center justify-center gap-2 w-full">
                 {/* Botón Plantar Todo */}
                 {emptyCells > 0 && (
                   <button
@@ -497,7 +500,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   </button>
                 )}
               </div>
-              <p className="text-sm text-[#A17C6B] text-center sm:text-left">Click en cada parcela para gestionarla</p>
+
+              {/* Texto centrado debajo */}
+              <p className="text-sm text-[#A17C6B] text-center">
+                Click en cada parcela para gestionarla
+              </p>
             </div>
 
             <div className="overflow-x-auto">
