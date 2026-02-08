@@ -15,7 +15,9 @@ import {
   IoStatsChartOutline,
   IoNotificationsOutline
 } from 'react-icons/io5';
+import { PiPlant } from "react-icons/pi";
 
+import AppTooltip from "../components/AppTooltip";
 import GardenModal from '../components/GardenModal';
 import GardenCard from '../components/Gardencard';
 import GardenView from '../components/Gardenview';
@@ -240,12 +242,14 @@ const Dashboard = ({ user }) => {
               </button>
 
               {/* Logout Button */}
-              <button
-                onClick={() => signOut(auth)}
-                className="flex items-center gap-2 px-2 py-2 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all font-medium group"
-              >
-                <IoLogOutOutline className="w-8 h-8 group-hover:scale-110 transition-transform" />
-              </button>
+              <AppTooltip content="Cerrar sesión" placement="bottom">
+                <button
+                  onClick={() => signOut(auth)}
+                  className="flex items-center gap-2 px-2 py-2 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all font-medium group"
+                >
+                  <IoLogOutOutline className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                </button>
+              </AppTooltip>
             </div>
           </div>
         </header>
@@ -255,18 +259,19 @@ const Dashboard = ({ user }) => {
 
           {/* Main Section - Huertos */}
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="text-3xl font-bold text-[#5B7B7A] mb-1">Mis Huertos</h2>
-                <p className="text-[#A17C6B]">Gestiona y monitorea tus cultivos</p>
-              </div>
-              <button
-                onClick={() => setShowGardenModal(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-6 py-3.5 rounded-xl hover:shadow-xl transition-all font-bold group"
-              >
-                <IoAddOutline className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                Nuevo Huerto
-              </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+
+              <h2 className="text-3xl font-bold text-[#5B7B7A]">
+                Mis Huertos
+              </h2>
+
+              <AppTooltip content="Nuevo Huerto">
+                <button className="flex items-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-4 py-2.5 rounded-xl hover:shadow-xl transition-all font-bold">
+                  <IoAddOutline className="w-5 h-5" />
+                  <PiPlant className="w-5 h-5" />
+                </button>
+              </AppTooltip>
+
             </div>
 
             {/* Empty State or Gardens Grid */}
@@ -292,18 +297,21 @@ const Dashboard = ({ user }) => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {gardens.map((garden) => (
-                  <GardenCard
-                    key={garden.id}
-                    garden={{
-                      ...garden,
-                      totals: gardenTotalsMap[garden.id] ?? { totalUnits: 0, totalGrams: 0 },
-                    }}
-                    onClick={handleOpenGarden}
-                  />
-                ))}
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {gardens.map((garden) => (
+                    <AppTooltip key={garden.id} content="Ver detalles">
+                      <div className="w-full">
+                        <GardenCard
+                          garden={{
+                            ...garden,
+                            totals: gardenTotalsMap[garden.id] ?? { totalUnits: 0, totalGrams: 0 },
+                          }}
+                          onClick={handleOpenGarden}
+                        />
+                      </div>
+                    </AppTooltip>
+                  ))}
+                </div>
             )}
           </div>
 
