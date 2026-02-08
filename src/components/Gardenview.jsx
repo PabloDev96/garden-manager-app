@@ -58,8 +58,8 @@ const AutoNoticeModal = ({ notice }) => {
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
       <div
         className={`w-full max-w-sm bg-white rounded-2xl border-2 shadow-xl p-5 text-center transform transition-all duration-300 ease-out ${isVisible
-            ? 'opacity-100 scale-100 translate-y-0'
-            : 'opacity-0 scale-95 -translate-y-4'
+          ? 'opacity-100 scale-100 translate-y-0'
+          : 'opacity-0 scale-95 -translate-y-4'
           } ${isDanger ? 'border-red-200' : 'border-[#CEB5A7]/40'}`}
       >
         <h4 className="text-lg font-bold text-[#5B7B7A]">{currentNotice.title}</h4>
@@ -471,7 +471,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
           {/* Grid */}
           <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
-            <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">           
+            <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
                 {/* Botón Plantar Todo */}
                 {emptyCells > 0 && (
@@ -773,9 +773,8 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
             <button
               onClick={onClose}
               disabled={processing}
-              className={`w-8 h-8 sm:w-10 sm:h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${
-                processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-              }`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
               aria-label="Cerrar"
             >
               <IoClose className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" />
@@ -867,9 +866,8 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               type="button"
               onClick={onClose}
               disabled={processing}
-              className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base ${
-                processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-              }`}
+              className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
             >
               Cancelar
             </button>
@@ -878,9 +876,8 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
               type="submit"
               onClick={handleSubmit}
               disabled={processing || !selectedCategory || !selectedType}
-              className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold text-sm sm:text-base ${
-                processing || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-              }`}
+              className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold text-sm sm:text-base ${processing || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
             >
               {processing ? 'Plantando...' : `Plantar ${emptyCells}`}
             </button>
@@ -1122,43 +1119,57 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
           {/* VIEW HARVEST */}
           {view === 'harvest' && plant && (
             <form id="harvest-form" onSubmit={handleHarvestSubmit} className="p-6 space-y-6">
-              <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-2 border-[#CEB5A7]/50 rounded-2xl p-6">
-                <div className="text-center mb-4">
-                  <p className="text-sm text-[#A17C6B]">
+              <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-2 border-[#CEB5A7]/50 rounded-2xl p-4 sm:p-6">
+                <div className="text-center mb-3 sm:mb-4">
+                  <p className="text-xs sm:text-sm text-[#A17C6B]">
                     Plantado el {new Date(plant.plantedDate).toLocaleDateString('es-ES')}
                   </p>
                 </div>
 
                 {loadingHistory ? (
-                  <p className="text-center text-sm text-[#A17C6B]">Cargando historial...</p>
+                  <p className="text-center text-xs sm:text-sm text-[#A17C6B]">Cargando historial...</p>
                 ) : harvestHistory.length > 0 ? (
                   <div className="border-t-2 border-[#CEB5A7]/30 pt-4 mt-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white rounded-xl p-4 border-2 border-[#5B7B7A]/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <IoBasketOutline className="w-5 h-5 text-[#5B7B7A]" />
-                          <p className="text-xs text-[#A17C6B]">Total recolectado</p>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      {/* CARD: Total recolectado */}
+                      <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#5B7B7A]/20 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          {/* contenedor cuadrado para igualar iconos */}
+                          <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#5B7B7A]/10">
+                            <IoBasketOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" />
+                          </span>
+                          <p className="text-[11px] sm:text-xs text-[#A17C6B]">Total recolectado</p>
                         </div>
-                        <p className="text-3xl font-bold text-[#5B7B7A]">{historyTotals.units}</p>
-                        <p className="text-xs text-[#A17C6B]">unidades</p>
+
+                        <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">
+                          {historyTotals.units}
+                        </p>
+                        <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">unidades</p>
                       </div>
 
+                      {/* CARD: Peso total */}
                       {historyTotals.grams > 0 && (
-                        <div className="bg-white rounded-xl p-4 border-2 border-[#5B7B7A]/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <IoScaleOutline className="w-5 h-5 text-[#5B7B7A]" />
-                            <p className="text-xs text-[#A17C6B]">Peso total</p>
+                        <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#5B7B7A]/20 text-center">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#5B7B7A]/10">
+                              <IoScaleOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" />
+                            </span>
+                            <p className="text-[11px] sm:text-xs text-[#A17C6B]">Peso total</p>
                           </div>
 
                           {historyTotals.grams < 1000 ? (
                             <>
-                              <p className="text-3xl font-bold text-[#5B7B7A]">{Math.round(historyTotals.grams)}</p>
-                              <p className="text-xs text-[#A17C6B]">gramos</p>
+                              <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">
+                                {Math.round(historyTotals.grams)}
+                              </p>
+                              <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">gramos</p>
                             </>
                           ) : (
                             <>
-                              <p className="text-3xl font-bold text-[#5B7B7A]">{(historyTotals.grams / 1000).toFixed(1)}</p>
-                              <p className="text-xs text-[#A17C6B]">kilogramos</p>
+                              <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">
+                                {(historyTotals.grams / 1000).toFixed(1)}
+                              </p>
+                              <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">kilogramos</p>
                             </>
                           )}
                         </div>
@@ -1168,31 +1179,33 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                     <button
                       type="button"
                       onClick={() => setShowHistoryDetails(!showHistoryDetails)}
-                      className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-[#5B7B7A]/10 hover:bg-[#5B7B7A]/20 rounded-xl transition-all font-medium text-[#5B7B7A]"
+                      className="w-full mt-3 sm:mt-4 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#5B7B7A]/10 hover:bg-[#5B7B7A]/20 rounded-xl transition-all font-medium text-[#5B7B7A] text-sm sm:text-base"
                     >
                       {showHistoryDetails ? (
                         <>
-                          <IoChevronUpOutline className="w-5 h-5" />
+                          <IoChevronUpOutline className="w-4 h-4 sm:w-5 sm:h-5" />
                           Ocultar detalles
                         </>
                       ) : (
                         <>
-                          <IoChevronDownOutline className="w-5 h-5" />
+                          <IoChevronDownOutline className="w-4 h-4 sm:w-5 sm:h-5" />
                           Ver más ({harvestHistory.length})
                         </>
                       )}
                     </button>
 
                     {showHistoryDetails && (
-                      <div className="mt-4 space-y-3 max-h-60 overflow-y-auto pr-1">
+                      <div className="mt-3 sm:mt-4 space-y-3 max-h-60 overflow-y-auto pr-1">
                         {harvestHistory.map((harvest) => {
                           const date = harvest.harvestDate?.toDate?.() || new Date();
                           return (
-                            <div key={harvest.id} className="bg-white rounded-xl p-4 border-2 border-[#CEB5A7]/30">
+                            <div key={harvest.id} className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#CEB5A7]/30">
                               <div className="flex justify-between items-start gap-4">
                                 <div>
-                                  <p className="font-bold text-[#5B7B7A]">{harvest.units} unidades</p>
-                                  <p className="text-xs text-[#A17C6B] mt-1">
+                                  <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">
+                                    {harvest.units} unidades
+                                  </p>
+                                  <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">
                                     {date.toLocaleDateString('es-ES', {
                                       day: 'numeric',
                                       month: 'short',
@@ -1202,10 +1215,15 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                                     })}
                                   </p>
                                 </div>
+
                                 {harvest.totalGrams && (
                                   <div className="text-right">
-                                    <p className="font-bold text-[#5B7B7A]">{Math.round(harvest.totalGrams)}g</p>
-                                    <p className="text-xs text-[#A17C6B] mt-1">{harvest.gramsPerUnit}g/ud</p>
+                                    <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">
+                                      {Math.round(harvest.totalGrams)}g
+                                    </p>
+                                    <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">
+                                      {harvest.gramsPerUnit}g/ud
+                                    </p>
                                   </div>
                                 )}
                               </div>
@@ -1216,7 +1234,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                     )}
                   </div>
                 ) : (
-                  <p className="text-center text-sm text-[#A17C6B]">Aún no hay cosechas registradas</p>
+                  <p className="text-center text-xs sm:text-sm text-[#A17C6B]">Aún no hay cosechas registradas</p>
                 )}
               </div>
 
