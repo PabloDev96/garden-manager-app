@@ -17,7 +17,7 @@ import {
 } from 'react-icons/io5';
 import { PiPlant } from "react-icons/pi";
 
-import AppTooltip from "../components/AppTooltip";
+import HoverTooltip from "../components/HoverTooltip";
 import GardenModal from '../components/GardenModal';
 import GardenCard from '../components/Gardencard';
 import GardenView from '../components/Gardenview';
@@ -37,7 +37,27 @@ const Dashboard = ({ user }) => {
   const [loadingGardens, setLoadingGardens] = useState(true);
   const [gardenTotalsMap, setGardenTotalsMap] = useState({});
 
+  // ====== MODALES / NOTICES ======
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [successGardenModal, setSuccessGardenModal] = useState(false);
+  const [welcomeModal, setWelcomeModal] = useState(false);
+
   const uid = user?.uid;
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    // Solo una vez por sesión (evita que salga cada re-render)
+    const key = `welcome_shown_${user.uid}`;
+    if (sessionStorage.getItem(key)) return;
+
+    sessionStorage.setItem(key, '1');
+    setWelcomeModal(true);
+
+    // autocierre
+    const t = setTimeout(() => setWelcomeModal(false), 2500);
+    return () => clearTimeout(t);
+  }, [user?.uid]);
 
   // Suscripción realtime de huertos del usuario
   useEffect(() => {
@@ -89,6 +109,10 @@ const Dashboard = ({ user }) => {
     if (!uid) return;
     try {
       await addGardenUseCase(uid, newGarden);
+
+      setShowGardenModal(false);
+      setSuccessGardenModal(true);
+      setTimeout(() => setSuccessGardenModal(false), 2200);
     } catch (e) {
       console.error(e);
       alert('No se pudo crear el huerto.');
@@ -216,15 +240,17 @@ const Dashboard = ({ user }) => {
             ))}
           </nav>
 
-          {/* Logout Button */}
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t-2 border-[#CEB5A7]/30 bg-white">
-            <button
-              onClick={() => signOut(auth)}
-              className="w-full flex items-center gap-3 px-5 py-4 rounded-xl text-red-600 hover:bg-red-50 border-2 border-red-200 hover:border-red-300 transition-all font-medium"
-            >
-              <IoLogOutOutline className="w-8 h-8" />
-              <span>Cerrar Sesión</span>
-            </button>
+            <HoverTooltip label="Cerrar sesión" className="inline-flex">
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="group flex items-center gap-3 px-3 py-3 rounded-xl
+      text-red-600 hover:bg-red-50 transition-all duration-200 font-medium cursor-pointer"
+                aria-label="Cerrar sesión"
+              >
+                <IoLogOutOutline className="w-8 h-8 transition-transform duration-200 group-hover:scale-110" />
+              </button>
+            </HoverTooltip>
           </div>
         </div>
 
@@ -242,14 +268,18 @@ const Dashboard = ({ user }) => {
               </button>
 
               {/* Logout Button */}
-              <AppTooltip content="Cerrar sesión" placement="bottom">
-                <button
-                  onClick={() => signOut(auth)}
-                  className="flex items-center gap-2 px-2 py-2 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all font-medium group"
-                >
-                  <IoLogOutOutline className="w-8 h-8 group-hover:scale-110 transition-transform" />
-                </button>
-              </AppTooltip>
+              <div className="relative group">
+                <HoverTooltip label="Cerrar sesión" mode="auto" className="inline-flex">
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="group flex items-center gap-3 px-3 py-3 rounded-xl
+      text-red-600 hover:bg-red-50 transition-all duration-200 font-medium cursor-pointer"
+                    aria-label="Cerrar sesión"
+                  >
+                    <IoLogOutOutline className="w-8 h-8 transition-transform duration-200 group-hover:scale-110" />
+                  </button>
+                </HoverTooltip>
+              </div>
             </div>
           </div>
         </header>
@@ -265,15 +295,19 @@ const Dashboard = ({ user }) => {
                 Mis Huertos
               </h2>
 
-              <AppTooltip content="Nuevo Huerto">
-                <button className="group flex items-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-4 py-2.5 rounded-xl hover:shadow-xl transition-all font-bold">
-                  {/* Icono + → gira */}
-                  <IoAddOutline className="w-5 h-5 transition-transform duration-300 ease-out group-hover:rotate-90 group-hover:scale-110" />
-
-                  {/* Icono planta → solo scale */}
-                  <PiPlant className="w-5 h-5 transition-transform duration-300 ease-out group-hover:scale-110" />
-                </button>
-              </AppTooltip>
+              <div className="relative group">
+                <HoverTooltip label="Añadir huerto" mode="auto" className="inline-flex">
+                  <button
+                    type="button"
+                    onClick={() => setShowGardenModal(true)}
+                    className="group flex items-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-4 py-2.5 rounded-xl hover:shadow-xl transition-all font-bold cursor-pointer"
+                    aria-label="Añadir huerto"
+                  >
+                    <IoAddOutline className="w-5 h-5 transition-transform duration-300 ease-out group-hover:rotate-90 group-hover:scale-110" />
+                    <PiPlant className="w-5 h-5 transition-transform duration-300 ease-out group-hover:scale-110" />
+                  </button>
+                </HoverTooltip>
+              </div>
 
             </div>
 
@@ -300,10 +334,10 @@ const Dashboard = ({ user }) => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr items-stretch">
                 {gardens.map((garden) => (
-                  <AppTooltip key={garden.id} content="Ver detalles">
-                    <div className="w-full">
+                  <HoverTooltip key={garden.id} label="Ver detalles" className="h-full">
+                    <div className="h-full">
                       <GardenCard
                         garden={{
                           ...garden,
@@ -312,7 +346,7 @@ const Dashboard = ({ user }) => {
                         onClick={handleOpenGarden}
                       />
                     </div>
-                  </AppTooltip>
+                  </HoverTooltip>
                 ))}
               </div>
             )}
@@ -373,6 +407,62 @@ const Dashboard = ({ user }) => {
             ))}
           </div>
         </main>
+        {showLogoutConfirm && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4"
+            onClick={() => setShowLogoutConfirm(false)}
+          >
+            <div
+              className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <h4 className="text-lg font-bold text-[#5B7B7A]">Cerrar sesión</h4>
+                <p className="text-sm text-[#A17C6B] mt-2">
+                  ¿Seguro que quieres cerrar sesión?
+                </p>
+              </div>
+
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold cursor-pointer"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => signOut(auth)}
+                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold cursor-pointer"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {successGardenModal && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
+            <div className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5 text-center">
+              <h4 className="text-lg font-bold text-[#5B7B7A]">Huerto creado</h4>
+              <p className="text-sm text-[#A17C6B] mt-2">¡Listo! Ya puedes añadir tus cultivos 🌱</p>
+            </div>
+          </div>
+        )}
+        {welcomeModal && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
+            <div className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5 text-center">
+              <h4 className="text-lg font-bold text-[#5B7B7A]">
+                ¡Bienvenido{user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
+              </h4>
+              <p className="text-sm text-[#A17C6B] mt-2">
+                Vamos a cuidar tus huertos 🌿
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Garden Modal */}

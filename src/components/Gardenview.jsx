@@ -14,7 +14,7 @@ import {
 } from 'react-icons/io5';
 import { GiPlantSeed } from "react-icons/gi";
 
-import AppTooltip from "../components/AppTooltip";
+import HoverTooltip from './HoverTooltip';
 import useCellSize from '../utils/calculateCellSize';
 
 // Use cases
@@ -412,16 +412,19 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                 </p>
               </div>
             </div>
-
-            <AppTooltip content="Eliminar Huerto">
+            <HoverTooltip label="Eliminar huerto" mode="auto" className="inline-flex">
               <button
                 onClick={() => setShowDeleteGardenConfirm(true)}
                 disabled={processingBulk}
-                className="flex items-center gap-2 px-3 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                className="group flex items-center gap-3 px-3 py-3 rounded-xl
+               text-red-600
+               hover:bg-red-50
+               transition-all duration-200
+               font-medium cursor-pointer"
               >
-                <IoTrashOutline className="w-5 h-5" />
+                <IoTrashOutline className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
               </button>
-            </AppTooltip>
+            </HoverTooltip>
           </div>
         </div>
       </header>
@@ -1100,7 +1103,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                   className={`flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all ${view === 'harvest'
                     ? 'bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white shadow'
                     : 'text-[#5B7B7A] hover:bg-[#E0F2E9]'
-                    } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   Recolectar
                 </button>
@@ -1112,7 +1115,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                   className={`flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all ${view === 'edit'
                     ? 'bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white shadow'
                     : 'text-[#5B7B7A] hover:bg-[#E0F2E9]'
-                    } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   Editar
                 </button>
@@ -1278,7 +1281,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                           gramsPerUnit: e.target.checked ? harvestData.gramsPerUnit : '',
                         })
                       }
-                      className="w-5 h-5 rounded border-2 border-[#5B7B7A] text-[#5B7B7A] focus:ring-[#5B7B7A]"
+                      className="w-5 h-5 rounded border-2 border-[#5B7B7A] text-[#5B7B7A] focus:ring-[#5B7B7A] cursor-pointer"
                       disabled={saving}
                     />
                     <div>
@@ -1320,7 +1323,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                 <select
                   value={selectedCategory}
                   onChange={handleCategoryChange}
-                  className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base"
+                  className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base cursor-pointer"
                   required
                   disabled={saving}
                 >
@@ -1350,7 +1353,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                             ? 'border-[#5B7B7A] bg-[#E0F2E9] shadow-md scale-105'
                             : 'border-[#CEB5A7]/50 hover:border-[#5B7B7A] hover:bg-[#E0F2E9]/30'
                           }
-                          ${saving ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{plantType.emoji}</span>
@@ -1402,7 +1405,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                 type="button"
                 onClick={onClose}
                 disabled={saving}
-                className={`px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
+                className={`px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                   }`}
               >
                 Cancelar
@@ -1412,7 +1415,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                 type="submit"
                 form="harvest-form"
                 disabled={saving || !harvestData.units}
-                className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2 ${saving || !harvestData.units ? 'opacity-60 cursor-not-allowed' : ''
+                className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2 ${saving || !harvestData.units ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                   }`}
               >
                 Registrar Cosecha
@@ -1427,7 +1430,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
                   disabled={saving}
-                  className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : ''
+                  className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                     }`}
                 >
                   Eliminar
@@ -1438,7 +1441,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                 type="submit"
                 form="edit-form"
                 disabled={saving || !selectedCategory || !selectedType}
-                className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${saving || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : ''
+                className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${saving || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                   }`}
               >
                 Guardar

@@ -37,133 +37,139 @@ const GardenCard = ({ garden, onClick }) => {
   return (
     <div
       onClick={() => onClick(garden)}
-      className="bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-6 hover:shadow-xl hover:border-[#5B7B7A] transition-all cursor-pointer group"
+      className="h-full flex flex-col bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-6 hover:shadow-xl hover:border-[#5B7B7A] transition-all cursor-pointer group"
     >
-      {/* Header */}
-      <div className="mb-5 text-center">
-        <h3 className="text-2xl font-extrabold text-[#5B7B7A] mb-1 group-hover:text-[#A17C6B] transition-colors">
-          {garden.name}
-        </h3>
+      {/* Contenido principal */}
+      <div className="flex-1 flex flex-col">
 
-        <p className="text-sm text-[#A17C6B] mb-1">
-          {garden.dimensions.width}m × {garden.dimensions.height}m
-        </p>
+        {/* Header */}
+        <div className="mb-5 text-center">
+          <h3 className="text-2xl font-extrabold text-[#5B7B7A] mb-1 group-hover:text-[#A17C6B] transition-colors">
+            {garden.name}
+          </h3>
 
-        <div className="flex items-center justify-center gap-1 text-sm font-semibold text-[#5B7B7A]">
-          <BiArea className="w-4 h-4" />
-          <span>{totalArea.toFixed(1)} m²</span>
-        </div>
-      </div>
-
-      {/* Grid Preview */}
-      <div className="bg-[#E0F2E9] rounded-xl p-4 mb-4">
-        <div
-          ref={gridRef}
-          className="grid"
-          style={{
-            gap: `${gapPx}px`,
-            gridTemplateColumns: `repeat(${previewCols}, ${cellSize}px)`,
-            justifyContent: 'center',
-          }}
-        >
-          {Array(previewRows).fill(null).map((_, rowIndex) => (
-            Array(previewCols).fill(null).map((_, colIndex) => {
-              const plant = garden.plants?.[rowIndex]?.[colIndex] ?? null;
-              const hasPlant = plant !== null;
-
-              const plantInfo =
-                hasPlant && plant?.category && plant?.type
-                  ? CROPS_DATABASE[plant.category]?.types?.[plant.type]
-                  : null;
-
-              return (
-                <div
-                  key={`${rowIndex}-${colIndex}`}
-                  className={`rounded-sm border transition-all relative overflow-hidden ${hasPlant ? 'border-0' : 'bg-[#CEB5A7] border-[#5B7B7A]'
-                    }`}
-                  style={{
-                    width: cellSize,
-                    height: cellSize,
-                    backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
-                  }}
-                  title={plantInfo?.name || plant?.name || 'Vacío'}
-                >
-                  {hasPlant && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span style={{ fontSize: Math.min(cellSize * 0.7, 22) }}>
-                        {plantInfo?.emoji || plant?.emoji || '🌱'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          ))}
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {/* Superficie por parcela */}
-        <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
-          <BiArea className="w-5 h-5 mb-1" />
-          <p className="text-xs opacity-90 mb-1">Superificie Parcela</p>
-          <p className="text-lg font-bold leading-none">
-            {plotArea.toFixed(2)} m²
+          <p className="text-sm text-[#A17C6B] mb-1">
+            {garden.dimensions.width}m × {garden.dimensions.height}m
           </p>
+
+          <div className="flex items-center justify-center gap-1 text-sm font-semibold text-[#5B7B7A]">
+            <BiArea className="w-4 h-4" />
+            <span>{totalArea.toFixed(1)} m²</span>
+          </div>
         </div>
 
-        {/* Parcelas ocupadas */}
-        <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
-          <IoGridOutline className="w-5 h-5 mb-1" />
-          <p className="text-xs opacity-90 mb-1">Parcelas</p>
-          <p className="text-lg font-bold leading-none">
-            {filledPlots}/{totalPlots}
-          </p>
-        </div>
-
-        {/* Unidades */}
-        <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
-          <IoBasketOutline className="w-5 h-5 mb-1" />
-          <p className="text-xs opacity-90 mb-1">Unidades</p>
-          <p className="text-lg font-bold leading-none">{totalUnits}</p>
-        </div>
-
-        {/* Peso */}
-        <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
-          <IoScaleOutline className="w-5 h-5 mb-1" />
-          <p className="text-xs opacity-90 mb-1">Peso</p>
-
-          {totalGrams <= 0 ? (
-            <p className="text-lg font-bold leading-none">—</p>
-          ) : totalGrams < 1000 ? (
-            <p className="text-lg font-bold leading-none">
-              {Math.round(totalGrams)} g
-            </p>
-          ) : (
-            <p className="text-lg font-bold leading-none">
-              {(totalGrams / 1000).toFixed(1)} kg
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-medium text-[#A17C6B]">Ocupación</p>
-          <p className="text-xs font-bold text-[#5B7B7A]">{fillPercentage}%</p>
-        </div>
-        <div className="h-2 bg-[#E0F2E9] rounded-full overflow-hidden">
+        {/* Grid Preview */}
+        <div className="bg-[#E0F2E9] rounded-xl p-4 mb-4">
           <div
-            className="h-full bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] transition-all duration-500"
-            style={{ width: `${fillPercentage}%` }}
-          />
+            ref={gridRef}
+            className="grid"
+            style={{
+              gap: `${gapPx}px`,
+              gridTemplateColumns: `repeat(${previewCols}, ${cellSize}px)`,
+              justifyContent: 'center',
+            }}
+          >
+            {Array(previewRows).fill(null).map((_, rowIndex) => (
+              Array(previewCols).fill(null).map((_, colIndex) => {
+                const plant = garden.plants?.[rowIndex]?.[colIndex] ?? null;
+                const hasPlant = plant !== null;
+
+                const plantInfo =
+                  hasPlant && plant?.category && plant?.type
+                    ? CROPS_DATABASE[plant.category]?.types?.[plant.type]
+                    : null;
+
+                return (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    className={`rounded-sm border transition-all relative overflow-hidden ${hasPlant
+                      ? 'border-0'
+                      : 'bg-[#CEB5A7] border-[#5B7B7A]'
+                      }`}
+                    style={{
+                      width: cellSize,
+                      height: cellSize,
+                      backgroundColor:
+                        plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
+                    }}
+                    title={plantInfo?.name || plant?.name || 'Vacío'}
+                  >
+                    {hasPlant && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span style={{ fontSize: Math.min(cellSize * 0.7, 22) }}>
+                          {plantInfo?.emoji || plant?.emoji || '🌱'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ))}
+          </div>
         </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
+            <BiArea className="w-5 h-5 mb-1" />
+            <p className="text-xs opacity-90 mb-1">Superficie Parcela</p>
+            <p className="text-lg font-bold leading-none">
+              {plotArea.toFixed(2)} m²
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
+            <IoGridOutline className="w-5 h-5 mb-1" />
+            <p className="text-xs opacity-90 mb-1">Parcelas</p>
+            <p className="text-lg font-bold leading-none">
+              {filledPlots}/{totalPlots}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
+            <IoBasketOutline className="w-5 h-5 mb-1" />
+            <p className="text-xs opacity-90 mb-1">Unidades</p>
+            <p className="text-lg font-bold leading-none">
+              {totalUnits}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
+            <IoScaleOutline className="w-5 h-5 mb-1" />
+            <p className="text-xs opacity-90 mb-1">Peso</p>
+
+            {totalGrams <= 0 ? (
+              <p className="text-lg font-bold leading-none">—</p>
+            ) : totalGrams < 1000 ? (
+              <p className="text-lg font-bold leading-none">
+                {Math.round(totalGrams)} g
+              </p>
+            ) : (
+              <p className="text-lg font-bold leading-none">
+                {(totalGrams / 1000).toFixed(1)} kg
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Progress */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-[#A17C6B]">Ocupación</p>
+            <p className="text-xs font-bold text-[#5B7B7A]">{fillPercentage}%</p>
+          </div>
+          <div className="h-2 bg-[#E0F2E9] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] transition-all duration-500"
+              style={{ width: `${fillPercentage}%` }}
+            />
+          </div>
+        </div>
+
       </div>
 
-      {/* Created Date */}
-      <div className="flex items-center gap-2 text-xs text-[#A17C6B]">
+      {/* Footer fijo abajo */}
+      <div className="mt-auto flex items-center gap-2 text-xs text-[#A17C6B]">
         <IoCalendarOutline className="w-4 h-4" />
         <span>
           {createdAtDate
