@@ -738,126 +738,133 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
             </div>
 
             <div className="overflow-x-auto">
-              <div
-                ref={gridWrapRef}
-                className="relative select-none touch-none"
-                onPointerDown={handlers.onPointerDown}
-                onPointerMove={handlers.onPointerMove}
-                onPointerUp={handlers.onPointerUp}
-              >
+              {/* Wrapper de scroll: ocupa el ancho, pero NO captura el drag */}
+              <div className="w-full flex justify-center">
+                {/* Contenedor shrink-to-fit: SOLO mide lo que mide el grid */}
                 <div
-                  ref={gridRef}
-                  className="grid min-w-fit mx-auto"
-                  style={{
-                    gap: `${gapPx}px`,
-                    gridTemplateColumns: `repeat(${garden.grid.columns}, ${cellSize}px)`,
-                    justifyContent: 'center',
-                  }}
+                  ref={gridWrapRef}
+                  className="relative inline-block select-none touch-none"
+                  onPointerDown={handlers.onPointerDown}
+                  onPointerMove={handlers.onPointerMove}
+                  onPointerUp={handlers.onPointerUp}
                 >
-                  {garden.plants.map((row, rowIndex) =>
-                    row.map((plant, colIndex) => {
-                      const hasPlant = plant !== null;
-                      const plantInfo =
-                        hasPlant && plant.category && plant.type
-                          ? CROPS_DATABASE[plant.category]?.types[plant.type]
-                          : null;
+                  {/* Fondo del grid (aquí el BG) */}
+                  <div className="rounded-2xl p-3 bg-[#E0F2E9] border-2 border-[#CEB5A7]/30">
+                    <div
+                      ref={gridRef}
+                      className="grid"
+                      style={{
+                        gap: `${gapPx}px`,
+                        gridTemplateColumns: `repeat(${garden.grid.columns}, ${cellSize}px)`,
+                      }}
+                    >
+                      {garden.plants.map((row, rowIndex) =>
+                        row.map((plant, colIndex) => {
+                          const hasPlant = plant !== null;
+                          const plantInfo =
+                            hasPlant && plant.category && plant.type
+                              ? CROPS_DATABASE[plant.category]?.types[plant.type]
+                              : null;
 
-                      const k = keyOf(rowIndex, colIndex);
-                      const isSelected = selectedCells.has(k);
+                          const k = keyOf(rowIndex, colIndex);
+                          const isSelected = selectedCells.has(k);
 
-                      return (
-                        <button
-                          ref={(el) => {
-                            cellRefs.current[k] = el;
-                          }}
-                          key={k}
-                          onClick={(e) => {
-                            if (wasDragRef.current) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              return;
-                            }
+                          return (
+                            <button
+                              ref={(el) => {
+                                cellRefs.current[k] = el;
+                              }}
+                              key={k}
+                              onClick={(e) => {
+                                if (wasDragRef.current) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  return;
+                                }
 
-                            // si hay selección múltiple, no abrir modal
-                            if (selectedCells.size > 0) return;
+                                // si hay selección múltiple, no abrir modal
+                                if (selectedCells.size > 0) return;
 
-                            handleCellClick(rowIndex, colIndex);
-                          }}
-                          disabled={savingCell || processingBulk}
-                          className={`rounded-lg border-2 transition-all relative group
-                                      ${hasPlant
-                              ? 'border-2 hover:shadow-lg'
-                              : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'}
-                                      ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
-                                      ${isSelected ? 'ring-4 ring-[#5B7B7A]/40 border-[#5B7B7A]' : ''}
-                                    `}
-                          style={{
-                            width: cellSize,
-                            height: cellSize,
-                            backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
-                            borderColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
-                          }}
-                          title={`Parcela ${rowIndex}, ${colIndex}`}
-                        >
-                          {hasPlant ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
-                              {plantInfo ? (
-                                <>
-                                  <span className="mb-0.5" style={{ fontSize: Math.min(cellSize * 0.5, 32) }}>
-                                    {plantInfo.emoji}
-                                  </span>
-                                  <p
-                                    className="text-white font-bold truncate w-full text-center leading-none drop-shadow-md"
-                                    style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
-                                  >
-                                    {plantInfo.name}
-                                  </p>
-                                </>
+                                handleCellClick(rowIndex, colIndex);
+                              }}
+                              disabled={savingCell || processingBulk}
+                              className={`rounded-lg border-2 transition-all relative group
+                    ${hasPlant
+                                  ? 'border-2 hover:shadow-lg'
+                                  : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'}
+                    ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+                    ${isSelected ? 'ring-4 ring-[#5B7B7A]/40 border-[#5B7B7A]' : ''}
+                  `}
+                              style={{
+                                width: cellSize,
+                                height: cellSize,
+                                backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
+                                borderColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
+                              }}
+                              title={`Parcela ${rowIndex}, ${colIndex}`}
+                            >
+                              {hasPlant ? (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
+                                  {plantInfo ? (
+                                    <>
+                                      <span className="mb-0.5" style={{ fontSize: Math.min(cellSize * 0.5, 32) }}>
+                                        {plantInfo.emoji}
+                                      </span>
+                                      <p
+                                        className="text-white font-bold truncate w-full text-center leading-none drop-shadow-md"
+                                        style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
+                                      >
+                                        {plantInfo.name}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <IoLeafOutline
+                                        className="text-white mb-0.5"
+                                        style={{
+                                          width: Math.min(16, cellSize * 0.5),
+                                          height: Math.min(16, cellSize * 0.5),
+                                        }}
+                                      />
+                                      <p
+                                        className="text-[10px] text-white font-bold truncate w-full text-center leading-none"
+                                        style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
+                                      >
+                                        {plant.name}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
                               ) : (
-                                <>
-                                  <IoLeafOutline
-                                    className="text-white mb-0.5"
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <IoAddOutline
+                                    className="text-[#5B7B7A]"
                                     style={{
-                                      width: Math.min(16, cellSize * 0.5),
-                                      height: Math.min(16, cellSize * 0.5),
+                                      width: Math.min(18, cellSize * 0.6),
+                                      height: Math.min(18, cellSize * 0.6),
                                     }}
                                   />
-                                  <p
-                                    className="text-[10px] text-white font-bold truncate w-full text-center leading-none"
-                                    style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
-                                  >
-                                    {plant.name}
-                                  </p>
-                                </>
+                                </div>
                               )}
-                            </div>
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <IoAddOutline
-                                className="text-[#5B7B7A]"
-                                style={{
-                                  width: Math.min(18, cellSize * 0.6),
-                                  height: Math.min(18, cellSize * 0.6),
-                                }}
-                              />
-                            </div>
-                          )}
 
-                          <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">
-                            {rowIndex},{colIndex}
-                          </span>
-                        </button>
-                      );
-                    })
+                              <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">
+                                {rowIndex},{colIndex}
+                              </span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Overlay del selector: relativo al contenedor shrink-to-fit */}
+                  {isSelecting && overlayStyle && (
+                    <div
+                      className="absolute z-30 border-2 border-[#5B7B7A] bg-[#5B7B7A]/10 rounded-lg pointer-events-none"
+                      style={overlayStyle}
+                    />
                   )}
                 </div>
-
-                {isSelecting && overlayStyle && (
-                  <div
-                    className="absolute z-30 border-2 border-[#5B7B7A] bg-[#5B7B7A]/10 rounded-lg pointer-events-none"
-                    style={overlayStyle}
-                  />
-                )}
               </div>
             </div>
           </div>
