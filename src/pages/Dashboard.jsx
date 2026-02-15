@@ -16,6 +16,7 @@ import {
   IoNotificationsOutline
 } from 'react-icons/io5';
 import { PiPlant } from "react-icons/pi";
+import { RiContractLeftLine, RiExpandRightLine } from "react-icons/ri";
 
 import HoverTooltip from "../components/HoverTooltip";
 import GardenModal from '../components/GardenModal';
@@ -36,6 +37,10 @@ const Dashboard = ({ user }) => {
   const [selectedGarden, setSelectedGarden] = useState(null);
   const [loadingGardens, setLoadingGardens] = useState(true);
   const [gardenTotalsMap, setGardenTotalsMap] = useState({});
+  const [menuExpanded, setMenuExpanded] = useState(() => {
+    const saved = localStorage.getItem("menuExpanded");
+    return saved ? JSON.parse(saved) : false;
+  });
 
   // ====== MODALES / NOTICES ======
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -104,6 +109,10 @@ const Dashboard = ({ user }) => {
 
     return () => unsub();
   }, [uid]);
+
+  useEffect(() => {
+    localStorage.setItem("menuExpanded", JSON.stringify(menuExpanded));
+  }, [menuExpanded]);
 
   const handleSaveGarden = async (newGarden) => {
     if (!uid) return;
@@ -188,21 +197,30 @@ const Dashboard = ({ user }) => {
         {menuOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 transition-opacity"
-            onClick={() => setMenuOpen(false)}
+            onClick={() => {
+              setMenuOpen(false);
+            }}
           />
         )}
 
         {/* Slide-out Menu */}
         <div
-          className={`fixed top-0 left-0 h-full w-80 bg-white border-r-2 border-[#CEB5A7] z-50 transform transition-transform duration-300 ease-in-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`fixed top-0 left-0 h-full ${menuExpanded ? "w-60" : "w-24"
+            } bg-white border-r-2 border-[#CEB5A7] z-50 transform transition-all duration-300 ease-in-out ${menuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
           onMouseEnter={() => setMenuOpen(true)}
-          onMouseLeave={() => setMenuOpen(false)}
+          onMouseLeave={() => {
+            setMenuOpen(false);
+          }}
         >
           {/* Menu Header */}
-          <div className="p-6 border-b-2 border-[#CEB5A7]/30 bg-gradient-to-br from-[#E0F2E9] to-white">
-            {/* User Info */}
-            <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border-2 border-[#CEB5A7]/50">
-              <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] flex items-center justify-center">
+          <div className="px-2 py-2 border-b-2 border-[#CEB5A7]/30 bg-gradient-to-br from-[#E0F2E9] to-white">
+            <div
+              className={`flex items-center bg-white rounded-2xl border-2 border-[#CEB5A7]/50 ${menuExpanded ? "gap-3 px-2 py-2" : "justify-center py-2"
+                }`}
+            >
+              {/* Avatar */}
+              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] flex items-center justify-center">
                 <img
                   src={user.photo}
                   alt=""
@@ -217,28 +235,72 @@ const Dashboard = ({ user }) => {
                   }}
                 />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-[#5B7B7A] truncate">{user.name}</p>
-                <p className="text-xs text-[#A17C6B] truncate">{user.email}</p>
-              </div>
+
+              {/* Info solo expanded */}
+              {menuExpanded && (
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[#5B7B7A] truncate">{user.name}</p>
+                  <p className="text-xs text-[#A17C6B] truncate">{user.email}</p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Menu Items */}
-          <nav className="p-4 space-y-2">
-            {menuItems.map((item, index) => (
-              <button
-                key={index}
-                className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all font-medium ${item.active
-                  ? 'bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white shadow-lg'
-                  : 'text-[#5B7B7A] hover:bg-[#E0F2E9] border-2 border-transparent hover:border-[#CEB5A7]'
-                  }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </button>
-            ))}
+          <nav className="p-4 space-y-6">
+            {menuItems.map((item, index) => {
+              const btn = (
+                <button
+                  key={index}
+                  className={`flex items-center rounded-xl transition-all font-medium
+    ${menuExpanded
+                      ? "w-full gap-4 px-3 py-3 justify-start"
+                      : "justify-center w-12 h-12 mx-auto"
+                    }
+    ${item.active
+                      ? "bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white shadow-lg"
+                      : "text-[#5B7B7A] hover:bg-[#E0F2E9] border-2 border-transparent hover:border-[#CEB5A7]"
+                    }`}
+                >
+                  <item.icon className="w-6 h-6 shrink-0" />
+                  {menuExpanded && <span className="truncate">{item.label}</span>}
+                </button>
+              );
+
+              // Tooltip solo en modo mini (para saber qué icono es)
+              return menuExpanded ? (
+                btn
+              ) : (
+                <HoverTooltip key={index} label={item.label} mode="auto" className="block">
+                  {btn}
+                </HoverTooltip>
+              );
+            })}
           </nav>
+
+          {/* Expand / Collapse Button */}
+          <div
+            className={`absolute bottom-4 left-0 right-0 px-3 flex ${menuExpanded ? "justify-end pr-2" : "justify-center"
+              }`}
+          >
+            <HoverTooltip
+              label={menuExpanded ? "Contraer menú" : "Expandir menú"}
+              mode="auto"
+            >
+              <button
+                type="button"
+                onClick={() => setMenuExpanded((v) => !v)}
+                className="group w-12 h-12 flex items-center justify-center rounded-xl hover:bg-[#E0F2E9] transition-all"
+                aria-label={menuExpanded ? "Contraer menú" : "Expandir menú"}
+              >
+                {menuExpanded ? (
+                  <RiContractLeftLine className="w-6 h-6 text-[#5B7B7A] transition-transform duration-200 group-hover:scale-110" />
+                ) : (
+                  <RiExpandRightLine className="w-6 h-6 text-[#5B7B7A] transition-transform duration-200 group-hover:scale-110" />
+                )}
+              </button>
+            </HoverTooltip>
+          </div>
         </div>
 
         {/* Header */}
