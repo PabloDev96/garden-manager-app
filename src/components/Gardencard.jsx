@@ -112,7 +112,7 @@ const GardenCard = ({ garden, onClick }) => {
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
             <BiArea className="w-5 h-5 mb-1" />
-            <p className="text-xs opacity-90 mb-1">Superficie Parcela</p>
+            <p className="text-xs opacity-90 mb-1">Superficie Planta</p>
             <p className="text-lg font-bold leading-none">
               {plotArea.toFixed(2)} m²
             </p>
@@ -120,7 +120,7 @@ const GardenCard = ({ garden, onClick }) => {
 
           <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
             <IoGridOutline className="w-5 h-5 mb-1" />
-            <p className="text-xs opacity-90 mb-1">Parcelas</p>
+            <p className="text-xs opacity-90 mb-1">Plantas</p>
             <p className="text-lg font-bold leading-none">
               {filledPlots}/{totalPlots}
             </p>
@@ -128,7 +128,7 @@ const GardenCard = ({ garden, onClick }) => {
 
           <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
             <IoBasketOutline className="w-5 h-5 mb-1" />
-            <p className="text-xs opacity-90 mb-1">Unidades</p>
+            <p className="text-xs opacity-90 mb-1">Unidades cosechadas</p>
             <p className="text-lg font-bold leading-none">
               {totalUnits}
             </p>
@@ -136,7 +136,7 @@ const GardenCard = ({ garden, onClick }) => {
 
           <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl p-3 flex flex-col items-center justify-center text-center text-white">
             <IoScaleOutline className="w-5 h-5 mb-1" />
-            <p className="text-xs opacity-90 mb-1">Peso</p>
+            <p className="text-xs opacity-90 mb-1">Peso total</p>
 
             {totalGrams <= 0 ? (
               <p className="text-lg font-bold leading-none">—</p>

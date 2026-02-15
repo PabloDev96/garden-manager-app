@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   IoClose,
   IoGridOutline,
@@ -16,6 +16,7 @@ import { GiPlantSeed } from "react-icons/gi";
 
 import HoverTooltip from './HoverTooltip';
 import useCellSize from '../utils/calculateCellSize';
+import useGridSelection from "../utils/useGridSelection";
 
 // Use cases
 import addCropUseCase from '../services/gardens/addCropUseCase';
@@ -32,21 +33,13 @@ const AutoNoticeModal = ({ notice }) => {
 
   useEffect(() => {
     if (notice) {
-      // Nueva notificación entrando
       setCurrentNotice(notice);
-      // Pequeño delay para activar la animación
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsVisible(true);
-        });
+        requestAnimationFrame(() => setIsVisible(true));
       });
     } else {
-      // Notificación saliendo
       setIsVisible(false);
-      // Esperar a que termine la animación antes de limpiar
-      const timer = setTimeout(() => {
-        setCurrentNotice(null);
-      }, 300); // Duración del fade-out
+      const timer = setTimeout(() => setCurrentNotice(null), 300);
       return () => clearTimeout(timer);
     }
   }, [notice]);
@@ -58,9 +51,7 @@ const AutoNoticeModal = ({ notice }) => {
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
       <div
-        className={`w-full max-w-sm bg-white rounded-2xl border-2 shadow-xl p-5 text-center transform transition-all duration-300 ease-out ${isVisible
-          ? 'opacity-100 scale-100 translate-y-0'
-          : 'opacity-0 scale-95 -translate-y-4'
+        className={`w-full max-w-sm bg-white rounded-2xl border-2 shadow-xl p-5 text-center transform transition-all duration-300 ease-out ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-4'
           } ${isDanger ? 'border-red-200' : 'border-[#CEB5A7]/40'}`}
       >
         <h4 className="text-lg font-bold text-[#5B7B7A]">{currentNotice.title}</h4>
@@ -94,6 +85,20 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const [showPlantAllModal, setShowPlantAllModal] = useState(false);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [processingBulk, setProcessingBulk] = useState(false);
+
+  // ====== SELECCIÓN POR ARRASTRE ======
+  const gridWrapRef = useRef(null);
+  const {
+    selectedCells,
+    isSelecting,
+    justDragged,
+    overlayStyle,
+    cellRefs,
+    keyOf,
+    handlers,
+    clearSelection,
+    wasDragRef,
+  } = useGridSelection({ gridWrapRef });
 
   const confirmDeleteGarden = async () => {
     try {
@@ -201,18 +206,25 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         }
       }
 
-      setGardenTotals((prev) => ({
-        totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
-        totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
-      }));
+      // ✅ SOLO actualizar totales si se borró historial
+      if (deleteHistory) {
+        setGardenTotals((prev) => ({
+          totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
+          totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
+        }));
+      }
 
       setShowDeleteAllConfirm(false);
+      clearSelection();
+
+      // ✅ opcional pero recomendado: refrescar datos del huerto
+      await onUpdate();
 
       notify(
         {
           variant: 'danger',
-          title: 'Plantación eliminada',
-          message: `${deletedCount} cultivos eliminados${deleteHistory ? ' (+ historial)' : ''}`,
+          title: 'Eliminación completada',
+          message: `${deletedCount} cultivos eliminados`,
         },
         2600
       );
@@ -222,7 +234,193 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         {
           variant: 'danger',
           title: 'Error',
-          message: 'No se pudo eliminar la plantación',
+          message: 'No se pudo completar la eliminación',
+        },
+        2600
+      );
+    } finally {
+      setProcessingBulk(false);
+    }
+  };
+
+  // ====== ACCIONES EN CELDAS SELECCIONADAS ======
+  const [showPlantSelectedModal, setShowPlantSelectedModal] = useState(false);
+  const [showDeleteSelectedConfirm, setShowDeleteSelectedConfirm] = useState(false);
+  const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
+  const [pendingPlantData, setPendingPlantData] = useState(null);
+  const [overwriteStats, setOverwriteStats] = useState({ occupied: 0, empty: 0 });
+
+  // ---- PLANTAR EN CELDAS SELECCIONADAS ----
+  const handlePlantSelected = async (plantData) => {
+    if (!uid || !garden || selectedCells.size === 0) return;
+
+    // Contar celdas vacías y ocupadas
+    let emptyCount = 0;
+    let occupiedCount = 0;
+
+    for (const cellKey of selectedCells) {
+      const [rowStr, colStr] = cellKey.split('-');
+      const row = parseInt(rowStr, 10);
+      const col = parseInt(colStr, 10);
+      const currentPlant = garden.plants[row]?.[col];
+
+      if (currentPlant) {
+        occupiedCount++;
+      } else {
+        emptyCount++;
+      }
+    }
+
+    // Si hay celdas ocupadas, pedir confirmación
+    if (occupiedCount > 0) {
+      setPendingPlantData(plantData);
+      setOverwriteStats({ occupied: occupiedCount, empty: emptyCount });
+      setShowPlantSelectedModal(false);
+      setShowOverwriteConfirm(true);
+      return;
+    }
+
+    // Si todas están vacías, plantar directamente
+    await executePlantSelected(plantData, false);
+  };
+
+  // ---- EJECUTAR PLANTACIÓN (con o sin sobrescritura) ----
+  const executePlantSelected = async (plantData, deleteHistory = false) => {
+    if (!uid || !garden || selectedCells.size === 0) return;
+
+    try {
+      setProcessingBulk(true);
+      let plantedCount = 0;
+      let overwrittenCount = 0;
+      let totalRemovedUnits = 0;
+      let totalRemovedGrams = 0;
+
+      for (const cellKey of selectedCells) {
+        const [rowStr, colStr] = cellKey.split('-');
+        const row = parseInt(rowStr, 10);
+        const col = parseInt(colStr, 10);
+        const currentPlant = garden.plants[row]?.[col];
+
+        if (currentPlant) {
+          // Sobrescribir: primero eliminar, luego plantar
+          const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(
+            uid,
+            garden.id,
+            row,
+            col,
+            { deleteHistory }
+          );
+          totalRemovedUnits += removedUnits;
+          totalRemovedGrams += removedGrams;
+
+          await addCropUseCase(uid, garden.id, row, col, plantData);
+          overwrittenCount++;
+        } else {
+          await addCropUseCase(uid, garden.id, row, col, plantData);
+          plantedCount++;
+        }
+      }
+
+      // ✅ SOLO actualizar totales si se borró historial en sobrescrituras
+      if (deleteHistory && overwrittenCount > 0) {
+        setGardenTotals((prev) => ({
+          totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
+          totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
+        }));
+      }
+
+      setShowPlantSelectedModal(false);
+      setShowOverwriteConfirm(false);
+      setPendingPlantData(null);
+      clearSelection();
+      await onUpdate();
+
+      const message =
+        overwrittenCount > 0
+          ? `${plantedCount} nuevas, ${overwrittenCount} sobrescritas`
+          : `${plantedCount} parcelas plantadas`;
+
+      notify(
+        {
+          variant: 'success',
+          title: 'Plantación completada',
+          message,
+        },
+        2600
+      );
+    } catch (e) {
+      console.error(e);
+      notify(
+        {
+          variant: 'danger',
+          title: 'Error',
+          message: 'No se pudo completar la plantación',
+        },
+        2600
+      );
+    } finally {
+      setProcessingBulk(false);
+    }
+  };
+
+  // ---- ELIMINAR CELDAS SELECCIONADAS ----
+  const handleDeleteSelected = async (deleteHistory = false) => {
+    if (!uid || !garden || selectedCells.size === 0) return;
+
+    try {
+      setProcessingBulk(true);
+      let deletedCount = 0;
+      let totalRemovedUnits = 0;
+      let totalRemovedGrams = 0;
+
+      for (const cellKey of selectedCells) {
+        const [rowStr, colStr] = cellKey.split('-');
+        const row = parseInt(rowStr, 10);
+        const col = parseInt(colStr, 10);
+        const currentPlant = garden.plants[row]?.[col];
+
+        if (currentPlant) {
+          const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(
+            uid,
+            garden.id,
+            row,
+            col,
+            { deleteHistory }
+          );
+          totalRemovedUnits += removedUnits;
+          totalRemovedGrams += removedGrams;
+          deletedCount++;
+        }
+      }
+
+      // ✅ SOLO actualizar totales si se borró historial
+      if (deleteHistory) {
+        setGardenTotals((prev) => ({
+          totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
+          totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
+        }));
+      }
+
+      setShowDeleteSelectedConfirm(false);
+      clearSelection();
+
+      await onUpdate();
+
+      notify(
+        {
+          variant: 'danger',
+          title: 'Eliminación completada',
+          message: `${deletedCount} cultivos eliminados`,
+        },
+        2600
+      );
+    } catch (e) {
+      console.error(e);
+      notify(
+        {
+          variant: 'danger',
+          title: 'Error',
+          message: 'No se pudo completar la eliminación',
         },
         2600
       );
@@ -270,7 +468,6 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       setShowPlantModal(false);
       setSelectedCell(null);
 
-      // ✅ modal auto-cierre confirmación recolección
       notify(
         {
           variant: 'success',
@@ -282,16 +479,19 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       );
     } catch (e) {
       console.error(e);
-      notify(
-        { variant: 'danger', title: 'Error', message: 'No se pudo registrar la cosecha.' },
-        2600
-      );
+      notify({ variant: 'danger', title: 'Error', message: 'No se pudo registrar la cosecha.' }, 2600);
     } finally {
       setSavingCell(false);
     }
   };
 
   const handleCellClick = (rowIndex, colIndex) => {
+    // Limpiar cualquier selección previa
+    if (selectedCells.size > 0) {
+      clearSelection();
+    }
+
+    // Abrir modal
     setSelectedCell({ row: rowIndex, col: colIndex });
     setShowPlantModal(true);
   };
@@ -309,13 +509,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       const mode = meta?.mode; // "create" | "edit"
       const title =
-        mode === 'create'
-          ? 'Cultivo añadido'
-          : mode === 'edit'
-            ? 'Cultivo editado'
-            : 'Cultivo guardado';
+        mode === 'create' ? 'Cultivo añadido' : mode === 'edit' ? 'Cultivo editado' : 'Cultivo guardado';
 
-      //modal auto-cierre cultivo añadido / editado
       notify(
         {
           variant: 'success',
@@ -338,24 +533,28 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     try {
       setSavingCell(true);
 
-      // removeCropUseCase devuelve { removedUnits, removedGrams }
       const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(
         uid,
         garden.id,
         selectedCell.row,
         selectedCell.col,
-        options // { deleteHistory: true/false }
+        options
       );
 
-      setGardenTotals((prev) => ({
-        totalUnits: Math.max(0, (prev.totalUnits || 0) - Math.max(0, removedUnits || 0)),
-        totalGrams: Math.max(0, (prev.totalGrams || 0) - Math.max(0, removedGrams || 0)),
-      }));
+      // ✅ SOLO actualizar totales en UI si realmente borraste historial
+      if (options?.deleteHistory) {
+        setGardenTotals((prev) => ({
+          totalUnits: Math.max(0, (prev.totalUnits || 0) - Math.max(0, removedUnits || 0)),
+          totalGrams: Math.max(0, (prev.totalGrams || 0) - Math.max(0, removedGrams || 0)),
+        }));
+      }
 
       setShowPlantModal(false);
       setSelectedCell(null);
 
-      // ✅ modal auto-cierre confirmado
+      // ✅ refrescar huerto para que se vea vacía la parcela
+      await onUpdate();
+
       notify(
         options?.deleteHistory
           ? { variant: 'danger', title: 'Eliminado', message: 'Cultivo + historial borrados' }
@@ -370,9 +569,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     }
   };
 
-  const currentPlant = selectedCell
-    ? garden.plants[selectedCell.row]?.[selectedCell.col]
-    : null;
+  const currentPlant = selectedCell ? garden.plants[selectedCell.row]?.[selectedCell.col] : null;
 
   const isMobile = window.matchMedia('(max-width: 640px)').matches;
 
@@ -384,13 +581,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     min: isMobile ? 14 : 18,
   });
 
-  // Calcular celdas vacías
-  const emptyCells = garden.plants.flat().filter(p => p === null).length;
-  const plantedCells = garden.plants.flat().filter(p => p !== null).length;
+  const emptyCells = garden.plants.flat().filter((p) => p === null).length;
+  const plantedCells = garden.plants.flat().filter((p) => p !== null).length;
 
   return (
     <div className="fixed inset-0 bg-[#E0F2E9] z-50 overflow-y-auto">
-      {/* ✅ Notificación auto-cierre global CON ANIMACIONES */}
       <AutoNoticeModal notice={notice} />
 
       {/* Header */}
@@ -407,20 +602,17 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <div>
                 <h1 className="text-2xl font-bold text-[#5B7B7A]">{garden.name}</h1>
                 <p className="text-sm text-[#A17C6B]">
-                  {garden.dimensions.width}m × {garden.dimensions.height}m |{' '}
-                  {garden.grid.columns}×{garden.grid.rows} parcelas
+                  {garden.dimensions.width}m × {garden.dimensions.height}m | {garden.grid.columns}×{garden.grid.rows}{' '}
+                  parcelas
                 </p>
               </div>
             </div>
+
             <HoverTooltip label="Eliminar huerto" mode="auto" className="inline-flex">
               <button
                 onClick={() => setShowDeleteGardenConfirm(true)}
                 disabled={processingBulk}
-                className="group flex items-center gap-3 px-3 py-3 rounded-xl
-               text-red-600
-               hover:bg-red-50
-               transition-all duration-200
-               font-medium cursor-pointer"
+                className="group flex items-center gap-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 font-medium cursor-pointer"
               >
                 <IoTrashOutline className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
               </button>
@@ -447,7 +639,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                 <IoLeafOutline className="w-4 h-4" />
                 <p className="text-xs opacity-90">Plantadas</p>
               </div>
-              <p className="text-2xl font-bold">{garden.plants.flat().filter(p => p !== null).length}</p>
+              <p className="text-2xl font-bold">{plantedCells}</p>
             </div>
 
             <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-2xl p-4 text-white flex flex-col items-center justify-center text-center min-h-[96px]">
@@ -477,9 +669,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           {/* Grid */}
           <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
             <div className="mb-6 flex flex-col items-center justify-center gap-3">
-              {/* Botones centrados */}
               <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-                {/* Botón Plantar Todo */}
                 {emptyCells > 0 && (
                   <button
                     onClick={() => setShowPlantAllModal(true)}
@@ -491,7 +681,6 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   </button>
                 )}
 
-                {/* Botón Eliminar Todo */}
                 {plantedCells > 0 && (
                   <button
                     onClick={() => setShowDeleteAllConfirm(true)}
@@ -504,96 +693,170 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                 )}
               </div>
 
-              {/* Texto centrado debajo */}
-              <p className="text-sm text-[#A17C6B] text-center">
-                Click en cada parcela para gestionarla
-              </p>
+              {/* Mostrar botones de acciones en celdas seleccionadas */}
+              {selectedCells.size > 0 && (
+                <div className="w-full flex flex-col items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm font-bold text-[#5B7B7A]">Selección: {selectedCells.size}</span>
+                    <button
+                      type="button"
+                      onClick={clearSelection}
+                      className="px-3 py-2 rounded-xl border-2 border-[#CEB5A7] text-[#5B7B7A] hover:bg-[#E0F2E9] font-bold text-sm"
+                    >
+                      Limpiar
+                    </button>
+                  </div>
+
+                  {/* Botones de acciones sobre la selección */}
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      onClick={() => setShowPlantSelectedModal(true)}
+                      disabled={processingBulk}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-lg transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <GiPlantSeed className="w-4 h-4" />
+                      <span>Plantar selección</span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowDeleteSelectedConfirm(true)}
+                      disabled={processingBulk}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <IoTrashOutline className="w-4 h-4" />
+                      <span>Eliminar selección</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selectedCells.size === 0 && (
+                <p className="text-sm text-[#A17C6B] text-center">
+                  Click en cada parcela para gestionarla (o arrastra para seleccionar varias)
+                </p>
+              )}
             </div>
 
             <div className="overflow-x-auto">
               <div
-                ref={gridRef}
-                className="grid min-w-fit mx-auto"
-                style={{
-                  gap: `${gapPx}px`,
-                  gridTemplateColumns: `repeat(${garden.grid.columns}, ${cellSize}px)`,
-                  justifyContent: 'center',
-                }}
+                ref={gridWrapRef}
+                className="relative select-none touch-none"
+                onPointerDown={handlers.onPointerDown}
+                onPointerMove={handlers.onPointerMove}
+                onPointerUp={handlers.onPointerUp}
               >
-                {garden.plants.map((row, rowIndex) =>
-                  row.map((plant, colIndex) => {
-                    const hasPlant = plant !== null;
-                    const plantInfo =
-                      hasPlant && plant.category && plant.type
-                        ? CROPS_DATABASE[plant.category]?.types[plant.type]
-                        : null;
+                <div
+                  ref={gridRef}
+                  className="grid min-w-fit mx-auto"
+                  style={{
+                    gap: `${gapPx}px`,
+                    gridTemplateColumns: `repeat(${garden.grid.columns}, ${cellSize}px)`,
+                    justifyContent: 'center',
+                  }}
+                >
+                  {garden.plants.map((row, rowIndex) =>
+                    row.map((plant, colIndex) => {
+                      const hasPlant = plant !== null;
+                      const plantInfo =
+                        hasPlant && plant.category && plant.type
+                          ? CROPS_DATABASE[plant.category]?.types[plant.type]
+                          : null;
 
-                    return (
-                      <button
-                        key={`${rowIndex}-${colIndex}`}
-                        onClick={() => handleCellClick(rowIndex, colIndex)}
-                        disabled={savingCell || processingBulk}
-                        className={`rounded-lg border-2 transition-all relative group ${hasPlant
-                          ? 'border-2 hover:shadow-lg'
-                          : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'
-                          } ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                        style={{
-                          width: cellSize,
-                          height: cellSize,
-                          backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
-                          borderColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
-                        }}
-                        title={`Parcela ${rowIndex}, ${colIndex}`}
-                      >
-                        {hasPlant ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
-                            {plantInfo ? (
-                              <>
-                                <span className="mb-0.5" style={{ fontSize: Math.min(cellSize * 0.5, 32) }}>
-                                  {plantInfo.emoji}
-                                </span>
-                                <p
-                                  className="text-white font-bold truncate w-full text-center leading-none drop-shadow-md"
-                                  style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
-                                >
-                                  {plantInfo.name}
-                                </p>
-                              </>
-                            ) : (
-                              <>
-                                <IoLeafOutline
-                                  className="text-white mb-0.5"
-                                  style={{
-                                    width: Math.min(16, cellSize * 0.5),
-                                    height: Math.min(16, cellSize * 0.5),
-                                  }}
-                                />
-                                <p
-                                  className="text-[10px] text-white font-bold truncate w-full text-center leading-none"
-                                  style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
-                                >
-                                  {plant.name}
-                                </p>
-                              </>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <IoAddOutline
-                              className="text-[#5B7B7A]"
-                              style={{
-                                width: Math.min(18, cellSize * 0.6),
-                                height: Math.min(18, cellSize * 0.6),
-                              }}
-                            />
-                          </div>
-                        )}
-                        <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">
-                          {rowIndex},{colIndex}
-                        </span>
-                      </button>
-                    );
-                  })
+                      const k = keyOf(rowIndex, colIndex);
+                      const isSelected = selectedCells.has(k);
+
+                      return (
+                        <button
+                          ref={(el) => {
+                            cellRefs.current[k] = el;
+                          }}
+                          key={k}
+                          onClick={(e) => {
+                            if (wasDragRef.current) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              return;
+                            }
+
+                            // si hay selección múltiple, no abrir modal
+                            if (selectedCells.size > 0) return;
+
+                            handleCellClick(rowIndex, colIndex);
+                          }}
+                          disabled={savingCell || processingBulk}
+                          className={`rounded-lg border-2 transition-all relative group
+                                      ${hasPlant
+                              ? 'border-2 hover:shadow-lg'
+                              : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'}
+                                      ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+                                      ${isSelected ? 'ring-4 ring-[#5B7B7A]/40 border-[#5B7B7A]' : ''}
+                                    `}
+                          style={{
+                            width: cellSize,
+                            height: cellSize,
+                            backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
+                            borderColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
+                          }}
+                          title={`Parcela ${rowIndex}, ${colIndex}`}
+                        >
+                          {hasPlant ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
+                              {plantInfo ? (
+                                <>
+                                  <span className="mb-0.5" style={{ fontSize: Math.min(cellSize * 0.5, 32) }}>
+                                    {plantInfo.emoji}
+                                  </span>
+                                  <p
+                                    className="text-white font-bold truncate w-full text-center leading-none drop-shadow-md"
+                                    style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
+                                  >
+                                    {plantInfo.name}
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <IoLeafOutline
+                                    className="text-white mb-0.5"
+                                    style={{
+                                      width: Math.min(16, cellSize * 0.5),
+                                      height: Math.min(16, cellSize * 0.5),
+                                    }}
+                                  />
+                                  <p
+                                    className="text-[10px] text-white font-bold truncate w-full text-center leading-none"
+                                    style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}
+                                  >
+                                    {plant.name}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <IoAddOutline
+                                className="text-[#5B7B7A]"
+                                style={{
+                                  width: Math.min(18, cellSize * 0.6),
+                                  height: Math.min(18, cellSize * 0.6),
+                                }}
+                              />
+                            </div>
+                          )}
+
+                          <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">
+                            {rowIndex},{colIndex}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                {isSelecting && overlayStyle && (
+                  <div
+                    className="absolute z-30 border-2 border-[#5B7B7A] bg-[#5B7B7A]/10 rounded-lg pointer-events-none"
+                    style={overlayStyle}
+                  />
                 )}
               </div>
             </div>
@@ -679,6 +942,131 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         </div>
       )}
 
+      {/* ✅ Modal Plantar Celdas Seleccionadas */}
+      {showPlantSelectedModal && (
+        <PlantAllModal
+          onClose={() => setShowPlantSelectedModal(false)}
+          onConfirm={handlePlantSelected}
+          processing={processingBulk}
+          emptyCells={selectedCells.size}
+          title="Plantar en celdas seleccionadas"
+          message={`Se plantarán las ${selectedCells.size} celdas vacías seleccionadas`}
+        />
+      )}
+
+      {/* ✅ Modal Eliminar Celdas Seleccionadas */}
+      {showDeleteSelectedConfirm && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setShowDeleteSelectedConfirm(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-4 sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <h4 className="text-base sm:text-lg font-bold text-[#5B7B7A]">Eliminar cultivos seleccionados</h4>
+              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">
+                Se eliminarán los cultivos de {selectedCells.size} parcelas. ¿Qué quieres hacer con el historial?
+              </p>
+            </div>
+
+            <div className="mt-4 sm:mt-5 grid grid-cols-1 gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteSelectedConfirm(false)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer"
+                disabled={processingBulk}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteSelected(false)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold text-sm sm:text-base cursor-pointer"
+                disabled={processingBulk}
+              >
+                Eliminar cultivos
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteSelected(true)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold text-sm sm:text-base cursor-pointer"
+                disabled={processingBulk}
+              >
+                Eliminar cultivos + historial
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Modal Confirmar Sobrescritura */}
+      {showOverwriteConfirm && pendingPlantData && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => {
+            setShowOverwriteConfirm(false);
+            setPendingPlantData(null);
+          }}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-2xl border-2 border-orange-300 shadow-xl p-4 sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <h4 className="text-base sm:text-lg font-bold text-orange-600">
+                ⚠️ Sobrescribir cultivos existentes
+              </h4>
+              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">
+                De las {selectedCells.size} celdas seleccionadas:
+              </p>
+              <div className="mt-2 text-sm font-bold">
+                <p className="text-green-600">✓ {overwriteStats.empty} vacías (se plantarán)</p>
+                <p className="text-orange-600">⚠ {overwriteStats.occupied} ocupadas (se sobrescribirán)</p>
+              </div>
+              <p className="text-xs text-[#A17C6B] mt-3">
+                ¿Qué quieres hacer con el historial de las {overwriteStats.occupied} parcelas ocupadas?
+              </p>
+            </div>
+
+            <div className="mt-4 sm:mt-5 grid grid-cols-1 gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOverwriteConfirm(false);
+                  setPendingPlantData(null);
+                }}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer"
+                disabled={processingBulk}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => executePlantSelected(pendingPlantData, false)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold text-sm sm:text-base cursor-pointer"
+                disabled={processingBulk}
+              >
+                Sobrescribir (mantener historial)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => executePlantSelected(pendingPlantData, true)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-bold text-sm sm:text-base cursor-pointer"
+                disabled={processingBulk}
+              >
+                Sobrescribir + borrar historial
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ✅ Modal confirmación eliminar huerto */}
       {showDeleteGardenConfirm && (
         <div
@@ -691,9 +1079,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           >
             <div className="text-center">
               <h4 className="text-base sm:text-lg font-bold text-[#5B7B7A]">Eliminar huerto</h4>
-              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">
-                ¿Seguro que quieres eliminar este huerto?
-              </p>
+              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">¿Seguro que quieres eliminar este huerto?</p>
             </div>
 
             <div className="mt-4 sm:mt-5 flex gap-2 sm:gap-3">
@@ -722,7 +1108,14 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 };
 
 // ===================== PlantAllModal =====================
-const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
+const PlantAllModal = ({
+  onClose,
+  onConfirm,
+  processing,
+  emptyCells,
+  title = "Plantar en todas las parcelas vacías",
+  message = null
+}) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [formData, setFormData] = useState({
@@ -738,9 +1131,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedCategory || !selectedType) {
-      return;
-    }
+    if (!selectedCategory || !selectedType) return;
 
     const plantInfo = CROPS_DATABASE[selectedCategory].types[selectedType];
 
@@ -768,15 +1159,16 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
         className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* HEADER */}
         <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-4 sm:p-6">
           <div className="relative flex items-start justify-between gap-2 sm:gap-4">
             <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0" />
 
             <div className="flex-1 min-w-0 text-center">
-              <h3 className="text-lg sm:text-xl font-bold text-[#5B7B7A]">Plantar en todas las parcelas vacías</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-[#5B7B7A]">
+                {title}
+              </h3>
               <p className="text-xs sm:text-sm text-[#A17C6B] mt-1">
-                Se plantarán {emptyCells} parcelas
+                {message || `Se plantarán ${emptyCells} parcelas`}
               </p>
             </div>
 
@@ -792,7 +1184,6 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
           </div>
         </div>
 
-        {/* BODY */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div>
             <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
@@ -869,7 +1260,6 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells }) => {
           </div>
         </form>
 
-        {/* FOOTER */}
         <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-3 sm:p-4">
           <div className="flex gap-2 sm:gap-3">
             <button
@@ -915,10 +1305,8 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [showHistoryDetails, setShowHistoryDetails] = useState(false);
 
-  // confirm eliminar cultivo
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // ✅ NUEVO: plantId "activo" del cultivo (para que al crear uno nuevo NO herede cosechas)
   const activePlantId = useMemo(() => {
     if (plant?.id) return plant.id;
     return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -941,14 +1329,15 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
     setShowDeleteConfirm(false);
   }, [plant, position?.row, position?.col]);
 
-  // Historial filtrado por plantId (NO hereda cosechas)
   useEffect(() => {
-    if (!plant || !uid || !gardenId || position === null) return;
+    if (!uid || !gardenId || position === null) return;
 
     const loadHistory = async () => {
       try {
         setLoadingHistory(true);
-        const history = await getPlotHarvestsUseCase(uid, gardenId, position.row, position.col, plant?.id);
+
+        // ✅ Historial "por parcela": NO filtrar por plantId
+        const history = await getPlotHarvestsUseCase(uid, gardenId, position.row, position.col);
         setHarvestHistory(history);
       } catch (error) {
         console.error('Error loading harvest history:', error);
@@ -958,7 +1347,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
     };
 
     loadHistory();
-  }, [uid, gardenId, position, plant?.id]);
+  }, [uid, gardenId, position?.row, position?.col]);
 
   const historyTotals = harvestHistory.reduce(
     (acc, h) => ({
@@ -1002,7 +1391,6 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
       wateringDays: formData.wateringDays,
     };
 
-    // ✅ CLAVE: informamos al padre si es create o edit
     onSave?.(plantData, { mode: isCreating ? 'create' : 'edit' });
   };
 
@@ -1030,7 +1418,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
 
     await onHarvest(harvestInfo);
 
-    const history = await getPlotHarvestsUseCase(uid, gardenId, position.row, position.col, plant?.id);
+    const history = await getPlotHarvestsUseCase(uid, gardenId, position.row, position.col);
     setHarvestHistory(history);
 
     setHarvestData({ units: '', gramsPerUnit: '', includeGrams: false });
@@ -1070,11 +1458,8 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
           <div className="relative flex items-start justify-between gap-4">
             <div className="w-10 h-10 shrink-0" />
 
-            {/* ✅ título centrado */}
             <div className="flex-1 min-w-0 text-center">
-              <h3 className="text-xl font-bold text-[#5B7B7A]">
-                {plant ? 'Gestionar planta' : 'Añadir Planta'}
-              </h3>
+              <h3 className="text-xl font-bold text-[#5B7B7A]">{plant ? 'Gestionar planta' : 'Añadir Planta'}</h3>
               <p className="text-sm text-[#A17C6B] truncate">
                 Parcela [{position?.row}, {position?.col}]
                 {plant && currentPlantInfo && ` - ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}
@@ -1092,7 +1477,6 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
             </button>
           </div>
 
-          {/* Tabs solo si hay planta */}
           {plant && (
             <div className="mt-5">
               <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-1 flex">
@@ -1141,23 +1525,19 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                 ) : harvestHistory.length > 0 ? (
                   <div className="border-t-2 border-[#CEB5A7]/30 pt-4 mt-4">
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                      {/* CARD: Total recolectado */}
                       <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#5B7B7A]/20 text-center">
                         <div className="flex items-center justify-center gap-2 mb-2">
-                          {/* contenedor cuadrado para igualar iconos */}
                           <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#5B7B7A]/10">
                             <IoBasketOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" />
                           </span>
                           <p className="text-[11px] sm:text-xs text-[#A17C6B]">Total recolectado</p>
                         </div>
-
                         <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">
                           {historyTotals.units}
                         </p>
                         <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">unidades</p>
                       </div>
 
-                      {/* CARD: Peso total */}
                       {historyTotals.grams > 0 && (
                         <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#5B7B7A]/20 text-center">
                           <div className="flex items-center justify-center gap-2 mb-2">
@@ -1212,9 +1592,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                             <div key={harvest.id} className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#CEB5A7]/30">
                               <div className="flex justify-between items-start gap-4">
                                 <div>
-                                  <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">
-                                    {harvest.units} unidades
-                                  </p>
+                                  <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">{harvest.units} unidades</p>
                                   <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">
                                     {date.toLocaleDateString('es-ES', {
                                       day: 'numeric',
@@ -1231,9 +1609,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                                     <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">
                                       {Math.round(harvest.totalGrams)}g
                                     </p>
-                                    <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">
-                                      {harvest.gramsPerUnit}g/ud
-                                    </p>
+                                    <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">{harvest.gramsPerUnit}g/ud</p>
                                   </div>
                                 )}
                               </div>
@@ -1315,7 +1691,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
             </form>
           )}
 
-          {/* VIEW EDIT (sirve tanto para editar como para añadir) */}
+          {/* VIEW EDIT */}
           {view === 'edit' && (
             <form id="edit-form" onSubmit={handleEditSubmit} className="p-6 space-y-6">
               <div>
@@ -1463,7 +1839,9 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
               <div className="text-center">
                 <h4 className="text-lg font-bold text-[#5B7B7A]">Eliminar cultivo</h4>
                 <p className="text-sm text-[#A17C6B] mt-2">¿Qué quieres hacer con este cultivo?</p>
-                <p className="text-xs text-[#A17C6B] mt-2">(Si mantienes el historial, no se borra nada de la base de datos)</p>
+                <p className="text-xs text-[#A17C6B] mt-2">
+                  (Si mantienes el historial, no se borra nada de la base de datos)
+                </p>
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-3">

@@ -14,9 +14,13 @@ import { db } from "../../config/firebase";
 
 /**
  * Elimina el cultivo de una parcela.
- * - Resta de stats/totals lo cosechado por ese plantId (sin bajar de 0)
- * - Vacía la parcela (plants.{row_col} -> null)
- * - Opcional: si deleteHistory=true, borra también el historial (harvests) de ese plantId
+ * - Siempre vacía la parcela (plants.{row_col} -> null)
+ * - Si deleteHistory=true:
+ *    - borra harvests de ESE plotKey+plantId
+ *    - y resta esos valores en totals (clamp a 0)
+ * - Si deleteHistory=false:
+ *    - NO toca harvests
+ *    - NO toca totals
  *
  * @returns {Promise<{ removedUnits: number, removedGrams: number }>}
  */
@@ -30,7 +34,7 @@ export default async function removeCropUseCase(uid, gardenId, row, col, options
   const gardenRef = doc(db, "users", uid, "gardens", gardenId);
   const key = `${row}_${col}`;
 
-  // 1) Leer cultivo actual en esa casilla para obtener plantId
+  // 1) Leer cultivo actual
   const gardenSnap = await getDoc(gardenRef);
   const gardenData = gardenSnap.data() || {};
   const currentPlant = gardenData?.plants?.[key] ?? null;
@@ -45,10 +49,27 @@ export default async function removeCropUseCase(uid, gardenId, row, col, options
   }
 
   const plantId = currentPlant.id;
+  const plotKey = key;
 
-  // 2) Traer cosechas de ese plantId (para saber cuánto restar)
+  // 2) Siempre vaciar parcela (esto NO borra historial)
+  await updateDoc(gardenRef, {
+    [`plants.${key}`]: null,
+    updatedAt: serverTimestamp(),
+  });
+
+  // ✅ Si NO quieres borrar historial, aquí se acaba
+  if (!deleteHistory) {
+    return { removedUnits: 0, removedGrams: 0 };
+  }
+
+  // 3) Si deleteHistory=true -> traer cosechas SOLO de esa parcela + ese plantId
   const harvestsColRef = collection(db, "users", uid, "gardens", gardenId, "harvests");
-  const harvestsQ = query(harvestsColRef, where("plantId", "==", plantId));
+  const harvestsQ = query(
+    harvestsColRef,
+    where("plotKey", "==", plotKey),
+    where("plantId", "==", plantId)
+  );
+
   const harvestsSnap = await getDocs(harvestsQ);
 
   let removedUnits = 0;
@@ -60,23 +81,21 @@ export default async function removeCropUseCase(uid, gardenId, row, col, options
     removedGrams += data.totalGrams || 0;
   });
 
-  // 3) Restar en stats/totals con TRANSACCIÓN (clamp a 0)
+  // 4) Restar en totals con transacción (clamp a 0)
   const totalsRef = doc(db, "users", uid, "gardens", gardenId, "stats", "totals");
 
   await runTransaction(db, async (tx) => {
     const totalsSnap = await tx.get(totalsRef);
 
-    // ✅ CORREGIDO: Si no existe, recalcular desde todas las cosechas
     let currentUnits = 0;
     let currentGrams = 0;
 
     if (totalsSnap.exists()) {
-      // Si existe, usar los valores actuales
       const data = totalsSnap.data() || {};
       currentUnits = Number(data.totalUnits || 0);
       currentGrams = Number(data.totalGrams || 0);
     } else {
-      // Si NO existe, recalcular desde TODAS las cosechas
+      // recalcular desde TODAS las cosechas
       const allHarvestsSnap = await getDocs(harvestsColRef);
       allHarvestsSnap.docs.forEach((d) => {
         const data = d.data() || {};
@@ -85,24 +104,15 @@ export default async function removeCropUseCase(uid, gardenId, row, col, options
       });
     }
 
-    // Restar lo del plantId que vamos a eliminar
-    const nextUnits = Math.max(0, currentUnits - (removedUnits || 0));
-    const nextGrams = Math.max(0, currentGrams - (removedGrams || 0));
+    const nextUnits = Math.max(0, currentUnits - removedUnits);
+    const nextGrams = Math.max(0, currentGrams - removedGrams);
 
     tx.set(totalsRef, { totalUnits: nextUnits, totalGrams: nextGrams });
   });
 
-  // 4) Vaciar la parcela
-  await updateDoc(gardenRef, {
-    [`plants.${key}`]: null,
-    updatedAt: serverTimestamp(),
-  });
-
-  // 5) Opcional: borrar historial en BD (harvests) de ese plantId
-  if (deleteHistory && harvestsSnap.size > 0) {
+  // 5) Borrar historial (harvest docs) en batches
+  if (harvestsSnap.size > 0) {
     const docs = harvestsSnap.docs;
-
-    // Batch máximo 500 ops -> chunk
     for (let i = 0; i < docs.length; i += 450) {
       const batch = writeBatch(db);
       const chunk = docs.slice(i, i + 450);
