@@ -745,7 +745,6 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   ref={gridWrapRef}
                   className="relative select-none"
                   style={{
-                    touchAction: "pan-x pan-y", // ✅ scroll permitido por defecto
                     WebkitUserSelect: "none",
                     userSelect: "none",
                     WebkitTouchCallout: "none",
