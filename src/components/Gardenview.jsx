@@ -743,7 +743,9 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                 {/* Contenedor shrink-to-fit: SOLO mide lo que mide el grid */}
                 <div
                   ref={gridWrapRef}
-                  className="relative inline-block select-none touch-none"
+                  className="relative select-none touch-pan-x touch-pan-y"
+                  style={{ touchAction: "pan-x pan-y" }}
+                  onPointerCancel={handlers.onPointerCancel}
                   onPointerDown={handlers.onPointerDown}
                   onPointerMove={handlers.onPointerMove}
                   onPointerUp={handlers.onPointerUp}
