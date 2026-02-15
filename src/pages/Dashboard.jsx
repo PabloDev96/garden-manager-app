@@ -216,11 +216,22 @@ const Dashboard = ({ user }) => {
           {/* Menu Header */}
           <div className="px-2 py-2 border-b-2 border-[#CEB5A7]/30 bg-gradient-to-br from-[#E0F2E9] to-white">
             <div
-              className={`flex items-center bg-white rounded-2xl border-2 border-[#CEB5A7]/50 ${menuExpanded ? "gap-3 px-2 py-2" : "justify-center py-2"
-                }`}
+              className={`flex items-center
+      ${menuExpanded
+                  ? "gap-3 px-2 py-2 bg-white rounded-2xl border-2 border-[#CEB5A7]/50"
+                  : "justify-center"
+                }
+    `}
             >
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] flex items-center justify-center">
+              <div
+                className={`overflow-hidden shrink-0 flex items-center justify-center
+        ${menuExpanded
+                    ? "w-10 h-10 rounded-xl bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B]"
+                    : "w-12 h-12 rounded-xl" // más limpio en compacto
+                  }
+      `}
+              >
                 <img
                   src={user.photo}
                   alt=""
@@ -228,9 +239,17 @@ const Dashboard = ({ user }) => {
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
-                    e.currentTarget.parentElement?.classList.add("text-white", "font-bold");
+                    e.currentTarget.parentElement?.classList.add(
+                      "text-white",
+                      "font-bold",
+                      "bg-gradient-to-br",
+                      "from-[#5B7B7A]",
+                      "to-[#A17C6B]"
+                    );
                     e.currentTarget.parentElement?.append(
-                      document.createTextNode(user?.name?.charAt(0)?.toUpperCase() ?? "?")
+                      document.createTextNode(
+                        user?.name?.charAt(0)?.toUpperCase() ?? "?"
+                      )
                     );
                   }}
                 />
