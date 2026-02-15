@@ -744,7 +744,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                 <div
                   ref={gridWrapRef}
                   className="relative select-none"
-                  style={{ touchAction: isSelecting ? "none" : "pan-x pan-y" }}
+                  // 🔥 MUY IMPORTANTE para iOS:
+                  // - el hook ya hace touchAction="none" en caliente cuando empieza selección
+                  // - aquí dejamos scroll normal
+                  style={{ touchAction: "pan-x pan-y", WebkitTouchCallout: "none" }}
+                  onContextMenu={(e) => e.preventDefault()} // evita menú de long-press iOS
                   onPointerDown={handlers.onPointerDown}
                   onPointerMove={handlers.onPointerMove}
                   onPointerUp={handlers.onPointerUp}
