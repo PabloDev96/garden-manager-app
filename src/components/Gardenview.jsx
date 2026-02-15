@@ -743,12 +743,12 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                 {/* Contenedor shrink-to-fit: SOLO mide lo que mide el grid */}
                 <div
                   ref={gridWrapRef}
-                  className="relative select-none touch-pan-x touch-pan-y"
-                  style={{ touchAction: "pan-x pan-y" }}
-                  onPointerCancel={handlers.onPointerCancel}
+                  className="relative select-none"
+                  style={{ touchAction: isSelecting ? "none" : "pan-x pan-y" }}
                   onPointerDown={handlers.onPointerDown}
                   onPointerMove={handlers.onPointerMove}
                   onPointerUp={handlers.onPointerUp}
+                  onPointerCancel={handlers.onPointerCancel}
                 >
                   {/* Fondo del grid (aquí el BG) */}
                   <div className="rounded-2xl p-3 bg-[#E0F2E9] border-2 border-[#CEB5A7]/30">

@@ -11,15 +11,11 @@ const rectNorm = (r) => ({
 
 export default function useGridSelection({
     gridWrapRef,
-    // Ajustes “mobile friendly”
     longPressMs = 220,
-    moveThresholdPx = 8,
+    moveThresholdPx = 10,
     dragStartThresholdPx = 6,
 } = {}) {
     const cellRefs = useRef({});
-
-    const pointerIdRef = useRef(null);
-    const didCaptureRef = useRef(false);
 
     const [selectedCells, setSelectedCells] = useState(() => new Set());
     const [isSelecting, setIsSelecting] = useState(false);
@@ -29,12 +25,20 @@ export default function useGridSelection({
 
     const wasDragRef = useRef(false);
 
-    // ✅ refs para “long press” en móvil
+    // pointer capture
+    const pointerIdRef = useRef(null);
+    const didCaptureRef = useRef(false);
+
+    // ✅ long-press state (NO guardar el event!)
     const pressTimerRef = useRef(null);
     const pendingTouchRef = useRef(false);
-    const startClientRef = useRef({ x: 0, y: 0 });
-    const startLocalRef = useRef({ x: 0, y: 0 });
-    const pointerTypeRef = useRef("mouse"); // "mouse" | "touch" | "pen"
+    const pointerTypeRef = useRef("mouse");
+
+    // guardamos lo necesario del down
+    const downTargetRef = useRef(null);
+    const downShiftRef = useRef(false);
+    const downClientRef = useRef({ x: 0, y: 0 });
+    const downLocalRef = useRef({ x: 0, y: 0 });
 
     const keyOf = (r, c) => `${r}-${c}`;
     const clearSelection = () => setSelectedCells(new Set());
@@ -70,28 +74,36 @@ export default function useGridSelection({
         setSelectedCells(next);
     };
 
-    const beginSelection = (e, { append } = { append: true }) => {
+    const beginSelectionFromStoredDown = () => {
         const wrap = gridWrapRef.current?.getBoundingClientRect();
         if (!wrap) return;
 
+        const append = downShiftRef.current; // shift = append
         if (!append) setSelectedCells(new Set());
 
         setIsSelecting(true);
         setJustDragged(false);
         wasDragRef.current = false;
 
-        pointerIdRef.current = e.pointerId;
-        didCaptureRef.current = false;
+        // capturamos el puntero al empezar selección (clave para móvil)
+        const target = downTargetRef.current;
+        const pid = pointerIdRef.current;
 
-        const x = clamp(startLocalRef.current.x, 0, wrap.width);
-        const y = clamp(startLocalRef.current.y, 0, wrap.height);
+        if (target && pid != null && !didCaptureRef.current) {
+            try {
+                target.setPointerCapture?.(pid);
+                didCaptureRef.current = true;
+            } catch { }
+        }
+
+        const x = clamp(downLocalRef.current.x, 0, wrap.width);
+        const y = clamp(downLocalRef.current.y, 0, wrap.height);
 
         setDragStart({ x, y });
         setDragBox({ x1: x, y1: y, x2: x, y2: y });
     };
 
     const onPointerDown = (e) => {
-        // solo botón izquierdo en mouse
         if (e.pointerType === "mouse" && e.button !== undefined && e.button !== 0) return;
 
         const wrap = gridWrapRef.current?.getBoundingClientRect();
@@ -99,31 +111,37 @@ export default function useGridSelection({
 
         pointerTypeRef.current = e.pointerType || "mouse";
 
-        const append = !!e.shiftKey;
+        // guardamos datos del down (NO el evento)
+        pointerIdRef.current = e.pointerId;
+        didCaptureRef.current = false;
 
-        // Guardamos posición inicial (client + local)
-        startClientRef.current = { x: e.clientX, y: e.clientY };
-        startLocalRef.current = {
+        downTargetRef.current = e.currentTarget; // importante: currentTarget (el wrap)
+        downShiftRef.current = !!e.shiftKey;
+
+        downClientRef.current = { x: e.clientX, y: e.clientY };
+        downLocalRef.current = {
             x: clamp(e.clientX - wrap.left, 0, wrap.width),
             y: clamp(e.clientY - wrap.top, 0, wrap.height),
         };
 
-        // ✅ Desktop: selección inmediata (como ya tenías)
-        if (pointerTypeRef.current !== "touch") {
-            beginSelection(e, { append });
-            return;
-        }
-
-        // ✅ Móvil: NO empezar aún. Permitimos scroll.
-        pendingTouchRef.current = true;
         setJustDragged(false);
         wasDragRef.current = false;
 
-        // Long press -> activar selección
+        // ✅ Desktop / mouse: selección inmediata
+        if (pointerTypeRef.current !== "touch") {
+            beginSelectionFromStoredDown();
+            return;
+        }
+
+        // ✅ Touch: esperamos long-press
+        pendingTouchRef.current = true;
+
         pressTimerRef.current = setTimeout(() => {
             if (!pendingTouchRef.current) return;
-            beginSelection(e, { append });
             pendingTouchRef.current = false;
+
+            // IMPORTANT: aquí ya empezamos selección de verdad
+            beginSelectionFromStoredDown();
         }, longPressMs);
     };
 
@@ -131,24 +149,21 @@ export default function useGridSelection({
         const wrap = gridWrapRef.current?.getBoundingClientRect();
         if (!wrap) return;
 
-        // ✅ Si estamos en “pending touch”, decidir si el usuario quería scroll
+        // ✅ si es touch y aún NO estamos seleccionando (pending), dejamos scroll
         if (pointerTypeRef.current === "touch" && pendingTouchRef.current) {
-            const dx = Math.abs(e.clientX - startClientRef.current.x);
-            const dy = Math.abs(e.clientY - startClientRef.current.y);
+            const dx = Math.abs(e.clientX - downClientRef.current.x);
+            const dy = Math.abs(e.clientY - downClientRef.current.y);
 
-            // Si se mueve “mucho” antes del long-press => es scroll, cancelamos selección
+            // si se mueve “mucho”, lo tratamos como scroll => cancel long-press
             if (dx > moveThresholdPx || dy > moveThresholdPx) {
                 cancelPendingTouch();
-                // Dejamos que el scroll ocurra (no hacemos preventDefault)
             }
             return;
         }
 
-        // Si no estamos seleccionando, no hacemos nada
         if (!isSelecting || !dragStart) return;
 
-        // ✅ mientras seleccionas, sí bloqueamos scroll
-        // (esto se nota sobre todo en iOS)
+        // ✅ ahora sí: mientras seleccionas, bloquea scroll
         e.preventDefault?.();
 
         const x = clamp(e.clientX - wrap.left, 0, wrap.width);
@@ -157,15 +172,9 @@ export default function useGridSelection({
         const dx = Math.abs(x - dragStart.x);
         const dy = Math.abs(y - dragStart.y);
 
-        // cuando ya es drag, capturamos (una sola vez)
         if (!justDragged && (dx > dragStartThresholdPx || dy > dragStartThresholdPx)) {
             setJustDragged(true);
             wasDragRef.current = true;
-
-            if (!didCaptureRef.current && pointerIdRef.current != null) {
-                e.currentTarget.setPointerCapture?.(pointerIdRef.current);
-                didCaptureRef.current = true;
-            }
         }
 
         const nextBox = { x1: dragStart.x, y1: dragStart.y, x2: x, y2: y };
@@ -178,7 +187,7 @@ export default function useGridSelection({
         setDragStart(null);
         setDragBox(null);
 
-        // liberar captura si la pusimos
+        // liberar captura
         if (didCaptureRef.current && gridWrapRef.current && pointerIdRef.current != null) {
             try {
                 gridWrapRef.current.releasePointerCapture?.(pointerIdRef.current);
@@ -200,9 +209,7 @@ export default function useGridSelection({
     };
 
     const onPointerUp = () => {
-        // Si soltó antes del long-press, cancelamos pending y listo
         cancelPendingTouch();
-
         if (!isSelecting) return;
         finish();
     };
