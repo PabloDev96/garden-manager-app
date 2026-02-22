@@ -29,6 +29,38 @@ import { notify } from '../utils/notify';
 import ConfirmModal from './ConfirmModal';
 import { Toaster } from 'sileo';
 
+// ===================== LoadingToast =====================
+const LoadingToast = ({ message }) => {
+  if (!message) return null;
+  return (
+    <div
+      className="fixed top-4 left-1/2 z-[99999] pointer-events-none"
+      style={{ transform: 'translateX(-50%)' }}
+    >
+      <div
+        className="flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-white text-sm font-medium"
+        style={{
+          background: 'linear-gradient(135deg, #5B7B7A 0%, #4a6968 60%, #A17C6B 100%)',
+          minWidth: '200px',
+        }}
+      >
+        <svg
+          className="shrink-0 animate-spin"
+          width="16" height="16" viewBox="0 0 16 16" fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" />
+          <path
+            d="M8 2a6 6 0 0 1 6 6"
+            stroke="white" strokeWidth="2.5" strokeLinecap="round"
+          />
+        </svg>
+        <span>{message}</span>
+      </div>
+    </div>
+  );
+};
+
 const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }) => {
   const [selectedCell, setSelectedCell] = useState(null);
   const [showPlantModal, setShowPlantModal] = useState(false);
@@ -43,6 +75,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const [showPlantAllModal, setShowPlantAllModal] = useState(false);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [processingBulk, setProcessingBulk] = useState(false);
+  const [loadingToast, setLoadingToast] = useState(null); // string | null
 
   // ====== SELECCIÓN POR ARRASTRE ======
   const gridWrapRef = useRef(null);
@@ -78,6 +111,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const handlePlantAll = async (plantData) => {
     if (!uid || !garden) return;
 
+    setLoadingToast('Plantando...');
     try {
       setProcessingBulk(true);
       let plantedCount = 0;
@@ -98,6 +132,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       }
 
       setShowPlantAllModal(false);
+      setLoadingToast(null);
 
       notify.success({
         title: 'Plantación completada',
@@ -105,6 +140,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       });
     } catch (e) {
       console.error(e);
+      setLoadingToast(null);
       notify.error({ title: 'Error', description: 'No se pudo completar la plantación' });
     } finally {
       setProcessingBulk(false);
@@ -115,6 +151,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const handleDeleteAll = async (deleteHistory = false) => {
     if (!uid || !garden) return;
 
+    setLoadingToast('Eliminando cultivos...');
     try {
       setProcessingBulk(true);
       let deletedCount = 0;
@@ -152,6 +189,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       // ✅ opcional pero recomendado: refrescar datos del huerto
       await onUpdate();
+      setLoadingToast(null);
 
       notify.error({
         title: 'Eliminación completada',
@@ -159,6 +197,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       });
     } catch (e) {
       console.error(e);
+      setLoadingToast(null);
       notify.error({ title: 'Error', description: 'No se pudo completar la eliminación' });
     } finally {
       setProcessingBulk(false);
@@ -210,6 +249,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const executePlantSelected = async (plantData, deleteHistory = false) => {
     if (!uid || !garden || selectedCells.size === 0) return;
 
+    setLoadingToast('Plantando selección...');
     try {
       setProcessingBulk(true);
       let plantedCount = 0;
@@ -262,9 +302,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           ? `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} nuevas, ${overwrittenCount} sobrescritas`
           : `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`;
 
+      setLoadingToast(null);
       notify.success({ title: 'Plantación completada', description });
     } catch (e) {
       console.error(e);
+      setLoadingToast(null);
       notify.error({ title: 'Error', description: 'No se pudo completar la plantación' });
     } finally {
       setProcessingBulk(false);
@@ -275,6 +317,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const handleDeleteSelected = async (deleteHistory = false) => {
     if (!uid || !garden || selectedCells.size === 0) return;
 
+    setLoadingToast('Eliminando selección...');
     try {
       setProcessingBulk(true);
       let deletedCount = 0;
@@ -313,6 +356,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       clearSelection();
 
       await onUpdate();
+      setLoadingToast(null);
 
       notify.error({
         title: 'Eliminación completada',
@@ -320,6 +364,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       });
     } catch (e) {
       console.error(e);
+      setLoadingToast(null);
       notify.error({ title: 'Error', description: 'No se pudo completar la eliminación' });
     } finally {
       setProcessingBulk(false);
@@ -474,6 +519,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   return (
     <div className="fixed inset-0 bg-[#E0F2E9] z-50 overflow-y-auto">
       <Toaster position="top-center" style={{ zIndex: 99999 }} />
+      <LoadingToast message={loadingToast} />
 
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-[#CEB5A7]/30 sticky top-0 z-10">
