@@ -37,7 +37,7 @@ body {
 /* Success — verde azulado */
 [data-sileo-toast][data-state="success"] [data-sileo-canvas] path,
 [data-sileo-toast][data-state="success"] [data-sileo-canvas] rect {
-  fill: #5B7B7A !important;
+  fill: #628d78 !important;
 }
 [data-sileo-toast][data-state="success"] [data-sileo-title],
 [data-sileo-toast][data-state="success"] [data-sileo-description] {

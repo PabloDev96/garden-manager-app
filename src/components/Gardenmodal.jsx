@@ -12,7 +12,7 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const garden = {
       id: Date.now().toString(),
       name: formData.name,
@@ -42,35 +42,45 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
 
   if (!isOpen) return null;
 
-  const cellWidth = formData.width && formData.columns ? 
+  const cellWidth = formData.width && formData.columns ?
     (parseFloat(formData.width) / parseInt(formData.columns)).toFixed(2) : 0;
-  const cellHeight = formData.height && formData.rows ? 
+  const cellHeight = formData.height && formData.rows ?
     (parseFloat(formData.height) / parseInt(formData.rows)).toFixed(2) : 0;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="bg-white rounded-3xl max-w-2xl w-full max-h-[90dvh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center">
-              <IoGridOutline className="w-6 h-6 text-white" />
-            </div>
-            <div>
+        <div className="sticky top-0 z-20 bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6">
+          <div className="relative flex items-start justify-between gap-4">
+            {/* Placeholder para centrar el título como en PlantModal */}
+            <div className="w-10 h-10 shrink-0" />
+
+            <div className="flex-1 min-w-0 text-center">
               <h2 className="text-2xl font-bold text-[#5B7B7A]">Nuevo Huerto</h2>
               <p className="text-sm text-[#A17C6B]">Configura las dimensiones y cuadrícula</p>
             </div>
+
+            <button
+              onClick={onClose}
+              className="w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all group"
+              aria-label="Cerrar"
+            >
+              <IoClose className="w-5 h-5 text-[#5B7B7A] group-hover:text-red-600" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all group"
-          >
-            <IoClose className="w-5 h-5 text-[#5B7B7A] group-hover:text-red-600" />
-          </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Nombre del huerto */}
           <div>
             <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
@@ -197,9 +207,11 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
               </div>
             </div>
           )}
+        </form>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
+        {/* Footer fijo */}
+        <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-4">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -207,15 +219,15 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
             >
               Cancelar
             </button>
+
             <button
               type="submit"
               className="flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2 group"
             >
-              <IoAddOutline className="w-5 h-5 group-hover:rotate-90 transition-transform" />
               Crear Huerto
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
