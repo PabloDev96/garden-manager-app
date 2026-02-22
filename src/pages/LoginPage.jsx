@@ -4,6 +4,7 @@ import { auth, googleProvider } from "../config/firebase";
 import { IoLeafOutline, IoAlertCircleOutline } from "react-icons/io5";
 import { PiPlantFill } from "react-icons/pi";
 import Button from "../components/Button";
+import { sileo } from "sileo";
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
@@ -14,6 +15,8 @@ const LoginPage = () => {
     setError(null);
     try {
       await signInWithPopup(auth, googleProvider);
+      // marcar que acabas de iniciar sesión
+      sessionStorage.setItem("justLoggedIn", "1");
     } catch (err) {
       setError("Error al iniciar sesión con Google");
       console.error(err);

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { sileo } from "sileo";
+import { notify } from "../utils/notify";
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import {
@@ -44,25 +46,28 @@ const Dashboard = ({ user }) => {
 
   // ====== MODALES / NOTICES ======
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [successGardenModal, setSuccessGardenModal] = useState(false);
-  const [welcomeModal, setWelcomeModal] = useState(false);
 
   const uid = user?.uid;
 
   useEffect(() => {
     if (!user?.uid) return;
 
-    // Solo una vez por sesión (evita que salga cada re-render)
-    const key = `welcome_shown_${user.uid}`;
-    if (sessionStorage.getItem(key)) return;
+    // solo si vienes del login
+    const justLoggedIn = sessionStorage.getItem("justLoggedIn");
+    if (!justLoggedIn) return;
 
-    sessionStorage.setItem(key, '1');
-    setWelcomeModal(true);
+    // consumirlo para que sea 1 sola vez
+    sessionStorage.removeItem("justLoggedIn");
 
-    // autocierre
-    const t = setTimeout(() => setWelcomeModal(false), 2500);
-    return () => clearTimeout(t);
-  }, [user?.uid]);
+    const firstName = typeof user?.name === "string" ? user.name.split(" ")[0] : "";
+
+    notify.success({
+      title: `¡Bienvenido${firstName ? `, ${firstName}` : ""}! 🌿`,
+      description: "Empieza a gestionar tus huertos y cultivos",
+      duration: 2500,
+    });
+
+  }, [user]);
 
   // Suscripción realtime de huertos del usuario
   useEffect(() => {
@@ -120,11 +125,17 @@ const Dashboard = ({ user }) => {
       await addGardenUseCase(uid, newGarden);
 
       setShowGardenModal(false);
-      setSuccessGardenModal(true);
-      setTimeout(() => setSuccessGardenModal(false), 2200);
+      notify.success({
+        title: "Huerto creado 🌱",
+        description: "¡Listo! Ya puedes añadir tus cultivos",
+        duration: 2000,
+      });
     } catch (e) {
       console.error(e);
-      alert('No se pudo crear el huerto.');
+      notify.error({
+        title: "No se pudo crear el huerto",
+        description: "Inténtalo de nuevo en unos segundos",
+      });
     }
   };
 
@@ -135,7 +146,10 @@ const Dashboard = ({ user }) => {
       await updateGardenUseCase(uid, updatedGarden.id, updatedGarden);
     } catch (e) {
       console.error(e);
-      alert('No se pudo actualizar el huerto.');
+      notify.error({
+        title: "No se pudo actualizar el huerto",
+        description: "Inténtalo de nuevo en unos segundos",
+      });
     }
   };
 
@@ -147,7 +161,10 @@ const Dashboard = ({ user }) => {
       setSelectedGarden(null);
     } catch (e) {
       console.error(e);
-      alert('No se pudo eliminar el huerto.');
+      notify.error({
+        title: "No se pudo eliminar el huerto",
+        description: "Inténtalo de nuevo en unos segundos",
+      });
     }
   };
 
@@ -504,26 +521,6 @@ const Dashboard = ({ user }) => {
                   Cerrar sesión
                 </button>
               </div>
-            </div>
-          </div>
-        )}
-        {successGardenModal && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
-            <div className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5 text-center">
-              <h4 className="text-lg font-bold text-[#5B7B7A]">Huerto creado</h4>
-              <p className="text-sm text-[#A17C6B] mt-2">¡Listo! Ya puedes añadir tus cultivos 🌱</p>
-            </div>
-          </div>
-        )}
-        {welcomeModal && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
-            <div className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5 text-center">
-              <h4 className="text-lg font-bold text-[#5B7B7A]">
-                ¡Bienvenido{user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
-              </h4>
-              <p className="text-sm text-[#A17C6B] mt-2">
-                Vamos a cuidar tus huertos 🌿
-              </p>
             </div>
           </div>
         )}
