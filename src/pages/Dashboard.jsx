@@ -127,7 +127,7 @@ const Dashboard = ({ user }) => {
 
       setShowGardenModal(false);
       notify.success({
-        title: "Huerto creado 🌱",
+        title: "Huerto creado",
         description: "¡Listo! Ya puedes añadir tus cultivos",
         duration: 2000,
       });
@@ -342,15 +342,19 @@ const Dashboard = ({ user }) => {
 
         {/* Header */}
         <header className="bg-white/80 backdrop-blur-md border-b border-[#CEB5A7]/30 sticky top-0 z-30">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-5">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
             <div className="flex justify-between items-center">
+
               {/* Menu Button */}
               <button
                 onClick={() => setMenuOpen(true)}
                 onMouseEnter={() => setMenuOpen(true)}
-                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all group"
+                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B]
+                   rounded-xl flex items-center justify-center
+                   hover:shadow-xl transition-all group"
               >
-                <IoMenuOutline className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                <IoMenuOutline className="w-6 h-6 text-white 
+                                  group-hover:scale-110 transition-transform" />
               </button>
 
               {/* Logout Button */}
@@ -358,14 +362,17 @@ const Dashboard = ({ user }) => {
                 <HoverTooltip label="Cerrar sesión" mode="auto" className="inline-flex">
                   <button
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="group flex items-center gap-3 px-3 py-3 rounded-xl
-      text-red-600 hover:bg-red-50 transition-all duration-200 font-medium cursor-pointer"
+                    className="w-12 h-12 flex items-center justify-center
+                       rounded-xl text-red-600 hover:bg-red-50
+                       transition-all duration-200 cursor-pointer"
                     aria-label="Cerrar sesión"
                   >
-                    <IoLogOutOutline className="w-8 h-8 transition-transform duration-200 group-hover:scale-110" />
+                    <IoLogOutOutline className="w-7 h-7
+                                        transition-transform duration-200 group-hover:scale-110" />
                   </button>
                 </HoverTooltip>
               </div>
+
             </div>
           </div>
         </header>

@@ -24,7 +24,7 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
         rows: parseInt(formData.rows),
         columns: parseInt(formData.columns)
       },
-      plants: {}, // Firestore-friendly: mapa de "row_col" -> plantData
+      plants: {},
       createdAt: new Date().toISOString()
     };
 
@@ -61,7 +61,6 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
         {/* Header */}
         <div className="sticky top-0 z-20 bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6">
           <div className="relative flex items-start justify-between gap-4">
-            {/* Placeholder para centrar el título como en PlantModal */}
             <div className="w-10 h-10 shrink-0" />
 
             <div className="flex-1 min-w-0 text-center">
@@ -74,14 +73,13 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
               className="w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all group"
               aria-label="Cerrar"
             >
-              <IoClose className="w-5 h-5 text-[#5B7B7A] group-hover:text-red-600" />
+              <IoClose className="w-5 h-5 text-[#5B7B7A] group-hover:text-red-600 cursor-pointer" />
             </button>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Nombre del huerto */}
+        {/* Form — id necesario para que el botón submit del footer lo encuentre */}
+        <form id="garden-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           <div>
             <label className="block text-sm font-bold text-[#5B7B7A] mb-2">
               Nombre del Huerto
@@ -97,14 +95,11 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
             />
           </div>
 
-          {/* Dimensiones */}
           <div>
             <h3 className="text-sm font-bold text-[#5B7B7A] mb-3">Dimensiones del Terreno</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-[#A17C6B] mb-2">
-                  Ancho (metros)
-                </label>
+                <label className="block text-xs font-medium text-[#A17C6B] mb-2">Ancho (metros)</label>
                 <input
                   type="number"
                   name="width"
@@ -118,9 +113,7 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#A17C6B] mb-2">
-                  Largo (metros)
-                </label>
+                <label className="block text-xs font-medium text-[#A17C6B] mb-2">Largo (metros)</label>
                 <input
                   type="number"
                   name="height"
@@ -136,14 +129,11 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Cuadrícula */}
           <div>
             <h3 className="text-sm font-bold text-[#5B7B7A] mb-3">Configuración de Cuadrícula</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-[#A17C6B] mb-2">
-                  Columnas
-                </label>
+                <label className="block text-xs font-medium text-[#A17C6B] mb-2">Columnas</label>
                 <input
                   type="number"
                   name="columns"
@@ -157,9 +147,7 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#A17C6B] mb-2">
-                  Filas
-                </label>
+                <label className="block text-xs font-medium text-[#A17C6B] mb-2">Filas</label>
                 <input
                   type="number"
                   name="rows"
@@ -175,7 +163,6 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Preview Info */}
           {formData.width && formData.height && formData.rows && formData.columns && (
             <div className="bg-[#E0F2E9] border-2 border-[#CEB5A7]/50 rounded-2xl p-4">
               <h4 className="text-sm font-bold text-[#5B7B7A] mb-3">📊 Información Calculada</h4>
@@ -188,9 +175,7 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
                 </div>
                 <div className="bg-white rounded-xl p-3 border border-[#CEB5A7]/30">
                   <p className="text-[#A17C6B] text-xs mb-1">Tamaño por parcela</p>
-                  <p className="text-[#5B7B7A] font-bold text-lg">
-                    {cellWidth}m × {cellHeight}m
-                  </p>
+                  <p className="text-[#5B7B7A] font-bold text-lg">{cellWidth}m × {cellHeight}m</p>
                 </div>
                 <div className="bg-white rounded-xl p-3 border border-[#CEB5A7]/30">
                   <p className="text-[#A17C6B] text-xs mb-1">Área total</p>
@@ -200,29 +185,28 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
                 </div>
                 <div className="bg-white rounded-xl p-3 border border-[#CEB5A7]/30">
                   <p className="text-[#A17C6B] text-xs mb-1">Área por parcela</p>
-                  <p className="text-[#5B7B7A] font-bold text-lg">
-                    {(cellWidth * cellHeight).toFixed(2)}m²
-                  </p>
+                  <p className="text-[#5B7B7A] font-bold text-lg">{(cellWidth * cellHeight).toFixed(2)}m²</p>
                 </div>
               </div>
             </div>
           )}
         </form>
 
-        {/* Footer fijo */}
+        {/* Footer fijo — el botón usa form="garden-form" para conectarse al form de arriba */}
         <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-4">
           <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold"
+              className="flex-1 px-6 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold cursor-pointer"
             >
               Cancelar
             </button>
 
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2 group"
+              form="garden-form"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2 group cursor-pointer"
             >
               Crear Huerto
             </button>
