@@ -47,7 +47,7 @@ body {
 /* Error — terracota */
 [data-sileo-toast][data-state="error"] [data-sileo-canvas] path,
 [data-sileo-toast][data-state="error"] [data-sileo-canvas] rect {
-  fill: #A17C6B !important;
+  fill: #CEB5A7 !important;
 }
 [data-sileo-toast][data-state="error"] [data-sileo-title],
 [data-sileo-toast][data-state="error"] [data-sileo-description] {

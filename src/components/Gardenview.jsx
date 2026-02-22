@@ -64,7 +64,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       setShowDeleteGardenConfirm(false);
 
-      notify.error({ title: 'Huerto eliminado', description: '🌿 Se ha eliminado correctamente' });
+      notify.error({ title: 'Huerto eliminado', description: 'Se ha eliminado correctamente' });
     } catch (e) {
       console.error(e);
       notify.error({ title: 'Error', description: 'No se pudo eliminar el huerto' });
@@ -100,7 +100,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       notify.success({
         title: 'Plantación completada',
-        description: `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`,
+        description: `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`,
       });
     } catch (e) {
       console.error(e);
@@ -154,7 +154,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       notify.error({
         title: 'Eliminación completada',
-        description: `🗑️ ${deletedCount} cultivos eliminados`,
+        description: `${deletedCount} cultivos eliminados`,
       });
     } catch (e) {
       console.error(e);
@@ -258,8 +258,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       const description =
         overwrittenCount > 0
-          ? `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'} · ${plantedCount} nuevas, ${overwrittenCount} sobrescritas`
-          : `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`;
+          ? `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} nuevas, ${overwrittenCount} sobrescritas`
+          : `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`;
 
       notify.success({ title: 'Plantación completada', description });
     } catch (e) {
@@ -315,7 +315,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       notify.error({
         title: 'Eliminación completada',
-        description: `🗑️ ${deletedCount} cultivos eliminados`,
+        description: `${deletedCount} cultivos eliminados`,
       });
     } catch (e) {
       console.error(e);
@@ -366,7 +366,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       notify.success({
         title: 'Recolectado',
-        description: `${harvestInfo.plantEmoji || '🌱'} ${harvestInfo.plantName || 'Cultivo'} · ${harvestInfo.units} ud${harvestInfo.totalGrams ? ` · ${Math.round(harvestInfo.totalGrams)}g` : ''}`,
+        description: `${harvestInfo.plantEmoji || ''} ${harvestInfo.plantName || 'Cultivo'} · ${harvestInfo.units} ud${harvestInfo.totalGrams ? ` · ${Math.round(harvestInfo.totalGrams)}g` : ''}`,
       });
     } catch (e) {
       console.error(e);
@@ -404,7 +404,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       notify.success({
         title,
-        description: `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'}`,
+        description: `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'}`,
       });
     } catch (e) {
       console.error(e);
@@ -444,8 +444,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       notify.error(
         options?.deleteHistory
-          ? { title: 'Eliminado', description: '🗑️ Cultivo + historial borrados' }
-          : { title: 'Cultivo eliminado', description: '🗑️ Historial conservado en BD' }
+          ? { title: 'Eliminado', description: 'Cultivo + historial borrados' }
+          : { title: 'Cultivo eliminado', description: 'Historial conservado en BD' }
       );
     } catch (e) {
       console.error(e);
@@ -1330,8 +1330,8 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
 
       notify.error(
         deleteHistory
-          ? { title: 'Eliminado', description: '🗑️ Cultivo + historial borrados' }
-          : { title: 'Cultivo eliminado', description: '🗑️ Historial conservado en BD' }
+          ? { title: 'Eliminado', description: 'Cultivo + historial borrados' }
+          : { title: 'Cultivo eliminado', description: 'Historial conservado en BD' }
       );
     } catch (e) {
       console.error(e);
