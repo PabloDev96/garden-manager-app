@@ -25,57 +25,14 @@ import addHarvestUseCase from '../services/gardens/addHarvestUseCase';
 import getPlotHarvestsUseCase from '../services/gardens/getPlotHarvestUseCase';
 import getGardenTotalsUseCase from '../services/gardens/getGardenTotalUseCase';
 import { CROPS_DATABASE } from '../utils/cropsDatabase';
-
-/** Mini-modal auto-cierre (estilo confirmación, pero sin botones) CON ANIMACIONES */
-const AutoNoticeModal = ({ notice }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [currentNotice, setCurrentNotice] = useState(null);
-
-  useEffect(() => {
-    if (notice) {
-      setCurrentNotice(notice);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setIsVisible(true));
-      });
-    } else {
-      setIsVisible(false);
-      const timer = setTimeout(() => setCurrentNotice(null), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [notice]);
-
-  if (!currentNotice) return null;
-
-  const isDanger = currentNotice.variant === 'danger';
-
-  return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
-      <div
-        className={`w-full max-w-sm bg-white rounded-2xl border-2 shadow-xl p-5 text-center transform transition-all duration-300 ease-out ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-4'
-          } ${isDanger ? 'border-red-200' : 'border-[#CEB5A7]/40'}`}
-      >
-        <h4 className="text-lg font-bold text-[#5B7B7A]">{currentNotice.title}</h4>
-        {currentNotice.message && (
-          <p className="text-sm text-[#A17C6B] mt-2">{currentNotice.message}</p>
-        )}
-      </div>
-    </div>
-  );
-};
+import { notify } from '../utils/notify';
+import { Toaster } from 'sileo';
 
 const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }) => {
   const [selectedCell, setSelectedCell] = useState(null);
   const [showPlantModal, setShowPlantModal] = useState(false);
   const [savingCell, setSavingCell] = useState(false);
   const [gardenTotals, setGardenTotals] = useState({ totalUnits: 0, totalGrams: 0 });
-
-  // ====== NOTIFICACIONES (auto-cierre) ======
-  const [notice, setNotice] = useState(null); // { title, message, variant }
-  const notify = (data, ms = 2500) => {
-    setNotice(data);
-    window.clearTimeout(notify._t);
-    notify._t = window.setTimeout(() => setNotice(null), ms);
-  };
 
   // ====== CONFIRM ELIMINAR HUERTO ======
   const [showDeleteGardenConfirm, setShowDeleteGardenConfirm] = useState(false);
@@ -107,24 +64,10 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       setShowDeleteGardenConfirm(false);
 
-      notify(
-        {
-          variant: 'danger',
-          title: 'Huerto eliminado',
-          message: 'Se ha eliminado correctamente',
-        },
-        2300
-      );
+      notify.error({ title: 'Huerto eliminado', description: '🌿 Se ha eliminado correctamente' });
     } catch (e) {
       console.error(e);
-      notify(
-        {
-          variant: 'danger',
-          title: 'Error',
-          message: 'No se pudo eliminar el huerto',
-        },
-        2600
-      );
+      notify.error({ title: 'Error', description: 'No se pudo eliminar el huerto' });
     } finally {
       setDeletingGarden(false);
     }
@@ -155,24 +98,13 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       setShowPlantAllModal(false);
 
-      notify(
-        {
-          variant: 'success',
-          title: 'Plantación completada',
-          message: `${plantedCount} parcelas plantadas`,
-        },
-        2600
-      );
+      notify.success({
+        title: 'Plantación completada',
+        description: `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`,
+      });
     } catch (e) {
       console.error(e);
-      notify(
-        {
-          variant: 'danger',
-          title: 'Error',
-          message: 'No se pudo completar la plantación',
-        },
-        2600
-      );
+      notify.error({ title: 'Error', description: 'No se pudo completar la plantación' });
     } finally {
       setProcessingBulk(false);
     }
@@ -220,24 +152,13 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       // ✅ opcional pero recomendado: refrescar datos del huerto
       await onUpdate();
 
-      notify(
-        {
-          variant: 'danger',
-          title: 'Eliminación completada',
-          message: `${deletedCount} cultivos eliminados`,
-        },
-        2600
-      );
+      notify.error({
+        title: 'Eliminación completada',
+        description: `🗑️ ${deletedCount} cultivos eliminados`,
+      });
     } catch (e) {
       console.error(e);
-      notify(
-        {
-          variant: 'danger',
-          title: 'Error',
-          message: 'No se pudo completar la eliminación',
-        },
-        2600
-      );
+      notify.error({ title: 'Error', description: 'No se pudo completar la eliminación' });
     } finally {
       setProcessingBulk(false);
     }
@@ -335,29 +256,15 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       clearSelection();
       await onUpdate();
 
-      const message =
+      const description =
         overwrittenCount > 0
-          ? `${plantedCount} nuevas, ${overwrittenCount} sobrescritas`
-          : `${plantedCount} parcelas plantadas`;
+          ? `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'} · ${plantedCount} nuevas, ${overwrittenCount} sobrescritas`
+          : `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`;
 
-      notify(
-        {
-          variant: 'success',
-          title: 'Plantación completada',
-          message,
-        },
-        2600
-      );
+      notify.success({ title: 'Plantación completada', description });
     } catch (e) {
       console.error(e);
-      notify(
-        {
-          variant: 'danger',
-          title: 'Error',
-          message: 'No se pudo completar la plantación',
-        },
-        2600
-      );
+      notify.error({ title: 'Error', description: 'No se pudo completar la plantación' });
     } finally {
       setProcessingBulk(false);
     }
@@ -406,24 +313,13 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
       await onUpdate();
 
-      notify(
-        {
-          variant: 'danger',
-          title: 'Eliminación completada',
-          message: `${deletedCount} cultivos eliminados`,
-        },
-        2600
-      );
+      notify.error({
+        title: 'Eliminación completada',
+        description: `🗑️ ${deletedCount} cultivos eliminados`,
+      });
     } catch (e) {
       console.error(e);
-      notify(
-        {
-          variant: 'danger',
-          title: 'Error',
-          message: 'No se pudo completar la eliminación',
-        },
-        2600
-      );
+      notify.error({ title: 'Error', description: 'No se pudo completar la eliminación' });
     } finally {
       setProcessingBulk(false);
     }
@@ -468,18 +364,13 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       setShowPlantModal(false);
       setSelectedCell(null);
 
-      notify(
-        {
-          variant: 'success',
-          title: 'Recolectado',
-          message: `${harvestInfo.units} unidades${harvestInfo.totalGrams ? ` · ${Math.round(harvestInfo.totalGrams)}g` : ''
-            }`,
-        },
-        2600
-      );
+      notify.success({
+        title: 'Recolectado',
+        description: `${harvestInfo.plantEmoji || '🌱'} ${harvestInfo.plantName || 'Cultivo'} · ${harvestInfo.units} ud${harvestInfo.totalGrams ? ` · ${Math.round(harvestInfo.totalGrams)}g` : ''}`,
+      });
     } catch (e) {
       console.error(e);
-      notify({ variant: 'danger', title: 'Error', message: 'No se pudo registrar la cosecha.' }, 2600);
+      notify.error({ title: 'Error', description: 'No se pudo registrar la cosecha.' });
     } finally {
       setSavingCell(false);
     }
@@ -511,17 +402,13 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       const title =
         mode === 'create' ? 'Cultivo añadido' : mode === 'edit' ? 'Cultivo editado' : 'Cultivo guardado';
 
-      notify(
-        {
-          variant: 'success',
-          title,
-          message: `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'}`,
-        },
-        2300
-      );
+      notify.success({
+        title,
+        description: `${plantData?.emoji || '🌱'} ${plantData?.name || 'Cultivo'}`,
+      });
     } catch (e) {
       console.error(e);
-      notify({ variant: 'danger', title: 'Error', message: 'No se pudo guardar la planta.' }, 2600);
+      notify.error({ title: 'Error', description: 'No se pudo guardar la planta.' });
     } finally {
       setSavingCell(false);
     }
@@ -555,15 +442,14 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       // ✅ refrescar huerto para que se vea vacía la parcela
       await onUpdate();
 
-      notify(
+      notify.error(
         options?.deleteHistory
-          ? { variant: 'danger', title: 'Eliminado', message: 'Cultivo + historial borrados' }
-          : { variant: 'danger', title: 'Cultivo eliminado', message: 'Historial conservado en BD' },
-        2400
+          ? { title: 'Eliminado', description: '🗑️ Cultivo + historial borrados' }
+          : { title: 'Cultivo eliminado', description: '🗑️ Historial conservado en BD' }
       );
     } catch (e) {
       console.error(e);
-      notify({ variant: 'danger', title: 'Error', message: 'No se pudo eliminar la planta.' }, 2600);
+      notify.error({ title: 'Error', description: 'No se pudo eliminar la planta.' });
     } finally {
       setSavingCell(false);
     }
@@ -586,7 +472,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
   return (
     <div className="fixed inset-0 bg-[#E0F2E9] z-50 overflow-y-auto">
-      <AutoNoticeModal notice={notice} />
+      <Toaster position="top-center" style={{ zIndex: 99999 }} />
 
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-[#CEB5A7]/30 sticky top-0 z-10">
@@ -885,7 +771,6 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           plant={currentPlant}
           position={selectedCell}
           saving={savingCell}
-          notify={notify}
           onClose={() => {
             setShowPlantModal(false);
             setSelectedCell(null);
@@ -1302,7 +1187,7 @@ const PlantAllModal = ({
 };
 
 // ===================== PlantModal =====================
-const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, onRemove, onHarvest, notify }) => {
+const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, onRemove, onHarvest }) => {
   const defaultView = plant ? 'harvest' : 'edit';
 
   const [view, setView] = useState(defaultView);
@@ -1386,7 +1271,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
     e.preventDefault();
 
     if (!selectedCategory || !selectedType) {
-      notify?.({ variant: 'danger', title: 'Faltan datos', message: 'Selecciona categoría y tipo' }, 2200);
+      notify.error({ title: 'Faltan datos', description: 'Selecciona categoría y tipo' });
       return;
     }
 
@@ -1411,7 +1296,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
     e.preventDefault();
 
     if (!harvestData.units || Number(harvestData.units) <= 0) {
-      notify?.({ variant: 'danger', title: 'Cantidad inválida', message: 'Introduce unidades válidas' }, 2200);
+      notify.error({ title: 'Cantidad inválida', description: 'Introduce unidades válidas' });
       return;
     }
 
@@ -1443,15 +1328,14 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
       setShowDeleteConfirm(false);
       await onRemove?.({ deleteHistory });
 
-      notify?.(
+      notify.error(
         deleteHistory
-          ? { variant: 'danger', title: 'Eliminado', message: 'Cultivo + historial borrados' }
-          : { variant: 'danger', title: 'Cultivo eliminado', message: 'Historial conservado en BD' },
-        2400
+          ? { title: 'Eliminado', description: '🗑️ Cultivo + historial borrados' }
+          : { title: 'Cultivo eliminado', description: '🗑️ Historial conservado en BD' }
       );
     } catch (e) {
       console.error(e);
-      notify?.({ variant: 'danger', title: 'Error', message: 'No se pudo eliminar' }, 2600);
+      notify.error({ title: 'Error', description: 'No se pudo eliminar' });
     }
   };
 

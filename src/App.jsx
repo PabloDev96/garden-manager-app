@@ -30,7 +30,7 @@ const App = () => {
   return (
     <>
       {/* TOASTER SIEMPRE */}
-      <Toaster position="top-center" style={{ zIndex: 9999 }} />
+      <Toaster position="top-center" style={{ zIndex: 99999 }} toastOptions={{ style: { zIndex: 99999 } }} />
 
       {loading ? (
         <div className="min-h-screen bg-[#E0F2E9] flex flex-col items-center justify-center">

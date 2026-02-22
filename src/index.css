@@ -17,3 +17,59 @@ body {
   display: block;
   overflow-x: hidden;
 }
+
+/* ===== SILEO TOASTS ===== */
+
+[data-sileo-description] {
+  text-align: center !important;
+}
+
+/* Textos — header y content transparentes para no tapar el SVG */
+[data-sileo-header] {
+  background: transparent !important;
+}
+[data-sileo-content] {
+  background: transparent !important;
+}
+
+/* El SVG es quien da la forma y el color real */
+
+/* Success — verde azulado */
+[data-sileo-toast][data-state="success"] [data-sileo-canvas] path,
+[data-sileo-toast][data-state="success"] [data-sileo-canvas] rect {
+  fill: #5B7B7A !important;
+}
+[data-sileo-toast][data-state="success"] [data-sileo-title],
+[data-sileo-toast][data-state="success"] [data-sileo-description] {
+  color: #fff !important;
+}
+
+/* Error — terracota */
+[data-sileo-toast][data-state="error"] [data-sileo-canvas] path,
+[data-sileo-toast][data-state="error"] [data-sileo-canvas] rect {
+  fill: #A17C6B !important;
+}
+[data-sileo-toast][data-state="error"] [data-sileo-title],
+[data-sileo-toast][data-state="error"] [data-sileo-description] {
+  color: #fff !important;
+}
+
+/* Warning — beige */
+[data-sileo-toast][data-state="warning"] [data-sileo-canvas] path,
+[data-sileo-toast][data-state="warning"] [data-sileo-canvas] rect {
+  fill: #CEB5A7 !important;
+}
+[data-sileo-toast][data-state="warning"] [data-sileo-title],
+[data-sileo-toast][data-state="warning"] [data-sileo-description] {
+  color: #5B7B7A !important;
+}
+
+/* Info — igual que success */
+[data-sileo-toast][data-state="info"] [data-sileo-canvas] path,
+[data-sileo-toast][data-state="info"] [data-sileo-canvas] rect {
+  fill: #5B7B7A !important;
+}
+[data-sileo-toast][data-state="info"] [data-sileo-title],
+[data-sileo-toast][data-state="info"] [data-sileo-description] {
+  color: #fff !important;
+}
