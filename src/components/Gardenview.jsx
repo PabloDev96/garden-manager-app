@@ -317,7 +317,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const handleDeleteSelected = async (deleteHistory = false) => {
     if (!uid || !garden || selectedCells.size === 0) return;
 
-    setLoadingToast('Eliminando selección...');
+    setLoadingToast('Eliminando cultivos...');
     try {
       setProcessingBulk(true);
       let deletedCount = 0;
