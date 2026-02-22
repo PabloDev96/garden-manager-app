@@ -249,7 +249,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const executePlantSelected = async (plantData, deleteHistory = false) => {
     if (!uid || !garden || selectedCells.size === 0) return;
 
-    setLoadingToast('Plantando selección...');
+    setLoadingToast('Plantando cultivos...');
     try {
       setProcessingBulk(true);
       let plantedCount = 0;
