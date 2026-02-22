@@ -26,6 +26,7 @@ import getPlotHarvestsUseCase from '../services/gardens/getPlotHarvestUseCase';
 import getGardenTotalsUseCase from '../services/gardens/getGardenTotalUseCase';
 import { CROPS_DATABASE } from '../utils/cropsDatabase';
 import { notify } from '../utils/notify';
+import ConfirmModal from './ConfirmModal';
 import { Toaster } from 'sileo';
 
 const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }) => {
@@ -791,54 +792,19 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         />
       )}
 
-      {/* ✅ Modal Eliminar Todo */}
-      {showDeleteAllConfirm && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setShowDeleteAllConfirm(false)}
-        >
-          <div
-            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-4 sm:p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center">
-              <h4 className="text-base sm:text-lg font-bold text-[#5B7B7A]">Eliminar todos los cultivos</h4>
-              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">
-                Se eliminarán {plantedCells} cultivos. ¿Qué quieres hacer con el historial?
-              </p>
-            </div>
-
-            <div className="mt-4 sm:mt-5 grid grid-cols-1 gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => setShowDeleteAllConfirm(false)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={processingBulk}
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDeleteAll(false)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={processingBulk}
-              >
-                Eliminar cultivos
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDeleteAll(true)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={processingBulk}
-              >
-                Eliminar cultivos + historial
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Eliminar Todo */}
+      <ConfirmModal
+        isOpen={showDeleteAllConfirm}
+        onClose={() => setShowDeleteAllConfirm(false)}
+        title="Eliminar todos los cultivos"
+        description={`Se eliminarán ${plantedCells} cultivos. ¿Qué quieres hacer con el historial?`}
+        variant="danger"
+        actions={[
+          { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteAllConfirm(false), disabled: processingBulk },
+          { label: 'Eliminar cultivos (mantener historial)', style: 'ghost', onClick: () => handleDeleteAll(false), disabled: processingBulk },
+          { label: 'Eliminar cultivos + historial', style: 'danger', onClick: () => handleDeleteAll(true), disabled: processingBulk },
+        ]}
+      />
 
       {/* ✅ Modal Plantar Celdas Seleccionadas */}
       {showPlantSelectedModal && (
@@ -852,54 +818,19 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         />
       )}
 
-      {/* ✅ Modal Eliminar Celdas Seleccionadas */}
-      {showDeleteSelectedConfirm && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setShowDeleteSelectedConfirm(false)}
-        >
-          <div
-            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-4 sm:p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center">
-              <h4 className="text-base sm:text-lg font-bold text-[#5B7B7A]">Eliminar cultivos seleccionados</h4>
-              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">
-                Se eliminarán los cultivos de {selectedCells.size} parcelas. ¿Qué quieres hacer con el historial?
-              </p>
-            </div>
-
-            <div className="mt-4 sm:mt-5 grid grid-cols-1 gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => setShowDeleteSelectedConfirm(false)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={processingBulk}
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDeleteSelected(false)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={processingBulk}
-              >
-                Eliminar cultivos
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDeleteSelected(true)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={processingBulk}
-              >
-                Eliminar cultivos + historial
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Eliminar Celdas Seleccionadas */}
+      <ConfirmModal
+        isOpen={showDeleteSelectedConfirm}
+        onClose={() => setShowDeleteSelectedConfirm(false)}
+        title="Eliminar cultivos seleccionados"
+        description={`Se eliminarán los cultivos de ${selectedCells.size} parcelas. ¿Qué quieres hacer con el historial?`}
+        variant="danger"
+        actions={[
+          { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteSelectedConfirm(false), disabled: processingBulk },
+          { label: 'Eliminar cultivos (mantener historial)', style: 'ghost', onClick: () => handleDeleteSelected(false), disabled: processingBulk },
+          { label: 'Eliminar cultivos + historial', style: 'danger', onClick: () => handleDeleteSelected(true), disabled: processingBulk },
+        ]}
+      />
 
       {/* ✅ Modal Confirmar Sobrescritura */}
       {showOverwriteConfirm && pendingPlantData && (
@@ -965,42 +896,18 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         </div>
       )}
 
-      {/* ✅ Modal confirmación eliminar huerto */}
-      {showDeleteGardenConfirm && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setShowDeleteGardenConfirm(false)}
-        >
-          <div
-            className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-4 sm:p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center">
-              <h4 className="text-base sm:text-lg font-bold text-[#5B7B7A]">Eliminar huerto</h4>
-              <p className="text-xs sm:text-sm text-[#A17C6B] mt-2">¿Seguro que quieres eliminar este huerto?</p>
-            </div>
-
-            <div className="mt-4 sm:mt-5 flex gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => setShowDeleteGardenConfirm(false)}
-                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={deletingGarden}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteGarden}
-                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold text-sm sm:text-base cursor-pointer"
-                disabled={deletingGarden}
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal confirmación eliminar huerto */}
+      <ConfirmModal
+        isOpen={showDeleteGardenConfirm}
+        onClose={() => setShowDeleteGardenConfirm(false)}
+        title="Eliminar huerto"
+        description="¿Seguro que quieres eliminar este huerto? Esta acción no se puede deshacer."
+        variant="danger"
+        actions={[
+          { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteGardenConfirm(false), disabled: deletingGarden },
+          { label: 'Eliminar huerto', style: 'danger', onClick: confirmDeleteGarden, disabled: deletingGarden },
+        ]}
+      />
     </div>
   );
 };
@@ -1723,55 +1630,19 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
           )}
         </div>
 
-        {/* Mini modal confirmación eliminar (con 3 opciones) */}
-        {showDeleteConfirm && (
-          <div
-            className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 p-4"
-            onClick={() => setShowDeleteConfirm(false)}
-          >
-            <div
-              className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center">
-                <h4 className="text-lg font-bold text-[#5B7B7A]">Eliminar cultivo</h4>
-                <p className="text-sm text-[#A17C6B] mt-2">¿Qué quieres hacer con este cultivo?</p>
-                <p className="text-xs text-[#A17C6B] mt-2">
-                  (Si mantienes el historial, no se borra nada de la base de datos)
-                </p>
-              </div>
-
-              <div className="mt-5 grid grid-cols-1 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="w-full px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold"
-                  disabled={saving}
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => confirmDelete(false)}
-                  className="w-full px-4 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold"
-                  disabled={saving}
-                >
-                  Eliminar cultivo
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => confirmDelete(true)}
-                  className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold"
-                  disabled={saving}
-                >
-                  Eliminar cultivo + historial
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modal confirmación eliminar cultivo */}
+        <ConfirmModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          title="Eliminar cultivo"
+          description="Si mantienes el historial, no se borra nada de la base de datos."
+          variant="danger"
+          actions={[
+            { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteConfirm(false), disabled: saving },
+            { label: 'Eliminar cultivo (mantener historial)', style: 'ghost', onClick: () => confirmDelete(false), disabled: saving },
+            { label: 'Eliminar cultivo + historial', style: 'danger', onClick: () => confirmDelete(true), disabled: saving },
+          ]}
+        />
       </div>
     </div>
   );

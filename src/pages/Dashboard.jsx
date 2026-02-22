@@ -21,6 +21,7 @@ import { PiPlant } from "react-icons/pi";
 import { RiContractLeftLine, RiExpandRightLine } from "react-icons/ri";
 
 import HoverTooltip from "../components/HoverTooltip";
+import ConfirmModal from '../components/ConfirmModal';
 import GardenModal from '../components/GardenModal';
 import GardenCard from '../components/Gardencard';
 import GardenView from '../components/Gardenview';
@@ -488,42 +489,17 @@ const Dashboard = ({ user }) => {
             ))}
           </div>
         </main>
-        {showLogoutConfirm && (
-          <div
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4"
-            onClick={() => setShowLogoutConfirm(false)}
-          >
-            <div
-              className="w-full max-w-sm bg-white rounded-2xl border-2 border-[#CEB5A7]/40 shadow-xl p-5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center">
-                <h4 className="text-lg font-bold text-[#5B7B7A]">Cerrar sesión</h4>
-                <p className="text-sm text-[#A17C6B] mt-2">
-                  ¿Seguro que quieres cerrar sesión?
-                </p>
-              </div>
-
-              <div className="mt-5 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold cursor-pointer"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => signOut(auth)}
-                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold cursor-pointer"
-                >
-                  Cerrar sesión
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          title="Cerrar sesión"
+          description="¿Seguro que quieres cerrar sesión?"
+          variant="danger"
+          actions={[
+            { label: 'Cancelar', style: 'cancel', onClick: () => setShowLogoutConfirm(false) },
+            { label: 'Cerrar sesión', style: 'danger', onClick: () => signOut(auth) },
+          ]}
+        />
       </div>
 
       {/* Garden Modal */}
