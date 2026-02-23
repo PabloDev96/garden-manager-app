@@ -46,24 +46,33 @@ const CitySearch = ({ ubicacion, onSelect }) => {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const debounceRef = useRef(null);
     const wrapperRef = useRef(null);
+    const inputRef = useRef(null);
 
-    // Cierra el desplegable al hacer clic fuera
+    // Cierra al hacer clic fuera
     useEffect(() => {
         const handler = (e) => {
             if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
                 setOpen(false);
+                setExpanded(false);
+                setQuery('');
+                setResults([]);
             }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    const handleExpand = () => {
+        setExpanded(true);
+        setTimeout(() => inputRef.current?.focus(), 50);
+    };
+
     const search = (q) => {
         clearTimeout(debounceRef.current);
         if (!q.trim()) { setResults([]); setOpen(false); return; }
-
         debounceRef.current = setTimeout(async () => {
             setLoading(true);
             try {
@@ -83,7 +92,7 @@ const CitySearch = ({ ubicacion, onSelect }) => {
             } finally {
                 setLoading(false);
             }
-        }, 350); // debounce 350ms para no saturar la API
+        }, 350);
     };
 
     const handleSelect = (item) => {
@@ -91,40 +100,48 @@ const CitySearch = ({ ubicacion, onSelect }) => {
         setQuery('');
         setResults([]);
         setOpen(false);
+        setExpanded(false);
     };
 
     const handleClear = () => {
         setQuery('');
         setResults([]);
         setOpen(false);
+        inputRef.current?.focus();
     };
 
     return (
         <div ref={wrapperRef} className="relative">
-            {/* Input de búsqueda */}
-            <div className="flex items-center gap-2 bg-white border-2 border-[#CEB5A7]/40 rounded-xl px-3 py-2 min-w-[260px] focus-within:border-[#5B7B7A] transition-colors">
+            <div className={`flex items-center gap-2 bg-white border-2 border-[#CEB5A7]/40 rounded-xl px-3 py-2 transition-all duration-300 ${expanded ? 'w-72 border-[#5B7B7A]' : 'w-10 h-10 justify-center cursor-pointer hover:bg-[#E0F2E9]'}`}
+                onClick={!expanded ? handleExpand : undefined}
+            >
                 {loading
                     ? <div className="w-4 h-4 rounded-full border-2 border-[#5B7B7A] border-t-transparent animate-spin shrink-0" />
-                    : <IoSearchOutline className="w-4 h-4 text-[#5B7B7A] shrink-0" />
+                    : <IoSearchOutline className={`w-4 h-4 shrink-0 transition-colors ${expanded ? 'text-[#5B7B7A]' : 'text-[#A17C6B]'}`} />
                 }
-                <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => { setQuery(e.target.value); search(e.target.value); }}
-                    onFocus={() => results.length > 0 && setOpen(true)}
-                    placeholder={ubicacion ? ubicacion.label : 'Buscar ciudad o pueblo…'}
-                    className="flex-1 text-sm text-[#5B7B7A] placeholder-[#CEB5A7] bg-transparent outline-none"
-                />
-                {query && (
-                    <button onClick={handleClear} className="shrink-0 text-[#CEB5A7] hover:text-[#A17C6B] transition-colors">
-                        <IoCloseOutline className="w-4 h-4" />
-                    </button>
+                {expanded && (
+                    <>
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={query}
+                            onChange={(e) => { setQuery(e.target.value); search(e.target.value); }}
+                            onFocus={() => results.length > 0 && setOpen(true)}
+                            placeholder="Buscar ciudad o pueblo…"
+                            className="flex-1 text-sm text-[#5B7B7A] placeholder-[#CEB5A7] bg-transparent outline-none"
+                        />
+                        {query && (
+                            <button onClick={handleClear} className="shrink-0 text-[#CEB5A7] hover:text-[#A17C6B] transition-colors">
+                                <IoCloseOutline className="w-4 h-4" />
+                            </button>
+                        )}
+                    </>
                 )}
             </div>
 
             {/* Resultados */}
             {open && (
-                <ul className="absolute top-full mt-1 left-0 right-0 bg-white border-2 border-[#CEB5A7]/40 rounded-xl shadow-lg z-50 overflow-hidden">
+                <ul className="absolute top-full mt-1 left-0 w-72 bg-white border-2 border-[#CEB5A7]/40 rounded-xl shadow-lg z-50 overflow-hidden">
                     {results.map((item, i) => (
                         <li key={i}>
                             <button
@@ -194,7 +211,7 @@ const DayDetail = ({ date, weather }) => {
                         </div>
                         <div>
                             <p className="font-bold text-[#3D5A59] text-sm">{cfg.label}</p>
-                            <p className="text-xs text-[#A17C6B]">{weather.tempMin}° — {weather.tempMax}°C</p>
+                            <p className="text-xs text-[#A17C6B]">{weather.tempMin}° - {weather.tempMax}°C</p>
                         </div>
                     </div>
 
@@ -214,8 +231,8 @@ const DayDetail = ({ date, weather }) => {
                             />
                         </div>
                         <p className="text-xs text-[#A17C6B] mt-2">
-                            {weather.precipProb >= 70 ? '🌧 Alta probabilidad — planifica el riego' :
-                                weather.precipProb >= 40 ? '🌦 Posible lluvia — revisa tus huertos' :
+                            {weather.precipProb >= 70 ? '🌧 Alta probabilidad - planifica el riego' :
+                                weather.precipProb >= 40 ? '🌦 Posible lluvia - revisa tus huertos' :
                                     weather.precipProb >= 20 ? '⛅ Baja probabilidad de lluvia' :
                                         '☀️ Sin lluvia prevista'}
                         </p>
@@ -239,9 +256,38 @@ const DayDetail = ({ date, weather }) => {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
+const OVIEDO = { label: 'Oviedo', lat: 43.3614, lon: -5.8593 };
+
 const CalendarioSection = () => {
     const [selectedDate, setSelectedDate] = useState(null);
-    const [ubicacion, setUbicacion] = useState({ label: 'Madrid', lat: 40.4168, lon: -3.7038 });
+    const [ubicacion, setUbicacion] = useState(OVIEDO);
+
+    // Intenta obtener la ubicación del dispositivo; si falla, usa Oviedo
+    useEffect(() => {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                // Geocoding inverso con Open-Meteo para obtener el nombre
+                try {
+                    const res = await fetch(
+                        `https://geocoding-api.open-meteo.com/v1/search?name=&latitude=${latitude}&longitude=${longitude}&count=1&language=es&format=json`
+                    );
+                    const data = await res.json();
+                    const r = data.results?.[0];
+                    const label = r ? [r.name, r.admin1].filter(Boolean).join(', ') : `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+                    setUbicacion({ label, lat: latitude, lon: longitude });
+                } catch {
+                    setUbicacion({ label: `Mi ubicación`, lat: latitude, lon: longitude });
+                }
+            },
+            () => {
+                // Sin permiso o error → Oviedo
+                setUbicacion(OVIEDO);
+            },
+            { timeout: 6000 }
+        );
+    }, []);
 
     const { weatherData, loading, error, refetch } = useOpenMeteo({
         latitude: ubicacion.lat,
