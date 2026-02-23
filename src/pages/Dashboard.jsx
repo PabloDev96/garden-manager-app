@@ -18,6 +18,7 @@ import {
 import { PiPlant } from "react-icons/pi";
 import { RiContractLeftLine, RiExpandRightLine } from "react-icons/ri";
 
+import CalendarioSection from '../components/CalendarioSection';
 import HoverTooltip from "../components/HoverTooltip";
 import ConfirmModal from '../components/ConfirmModal';
 import GardenModal from '../components/GardenModal';
@@ -35,7 +36,6 @@ import deleteGardenUseCase from '../services/gardens/deleteGardenUseCase';
 const HuertosSection = ({ gardens, loadingGardens, gardenTotalsMap, onOpenGarden, onAddGarden }) => (
   <div className="space-y-6">
     <div className="flex flex-col items-center justify-center gap-4 text-center">
-      <h2 className="text-3xl font-bold text-[#5B7B7A]">Mis Huertos</h2>
       <HoverTooltip label="Añadir huerto" mode="auto" className="inline-flex">
         <button
           type="button"
@@ -100,7 +100,6 @@ const DashboardSection = ({ gardens }) => {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-bold text-[#5B7B7A] text-center">Dashboard</h2>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -163,24 +162,10 @@ const DashboardSection = ({ gardens }) => {
   );
 };
 
-const CalendarioSection = () => (
-  <div className="space-y-6">
-    <h2 className="text-3xl font-bold text-[#5B7B7A] text-center">Calendario</h2>
-    <div className="bg-white border-2 border-dashed border-[#CEB5A7] rounded-3xl p-16 text-center">
-      <div className="w-20 h-20 bg-[#E0F2E9] rounded-full flex items-center justify-center mx-auto mb-6">
-        <IoCalendarOutline className="w-10 h-10 text-[#5B7B7A]" />
-      </div>
-      <h3 className="text-xl font-bold text-[#5B7B7A] mb-2">Calendario de tareas</h3>
-      <p className="text-[#A17C6B] max-w-md mx-auto">
-        Aquí irá el calendario de riegos, cosechas y tareas pendientes. Librería pendiente de integrar.
-      </p>
-    </div>
-  </div>
-);
+
 
 const ConfiguracionSection = () => (
   <div className="space-y-6">
-    <h2 className="text-3xl font-bold text-[#5B7B7A] text-center">Configuración</h2>
     <div className="bg-white border-2 border-dashed border-[#CEB5A7] rounded-3xl p-16 text-center">
       <div className="w-20 h-20 bg-[#E0F2E9] rounded-full flex items-center justify-center mx-auto mb-6">
         <IoSettingsOutline className="w-10 h-10 text-[#5B7B7A]" />
@@ -196,10 +181,10 @@ const ConfiguracionSection = () => (
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { id: 'huertos',       label: 'Huertos',       icon: PiPlant            },
-  { id: 'dashboard',    label: 'Dashboard',     icon: IoStatsChartOutline },
-  { id: 'calendario',   label: 'Calendario',    icon: IoCalendarOutline   },
-  { id: 'configuracion',label: 'Configuración', icon: IoSettingsOutline   },
+  { id: 'huertos', label: 'Huertos', icon: PiPlant },
+  { id: 'dashboard', label: 'Dashboard', icon: IoStatsChartOutline },
+  { id: 'calendario', label: 'Calendario', icon: IoCalendarOutline },
+  { id: 'configuracion', label: 'Configuración', icon: IoSettingsOutline },
 ];
 
 // ─── Componente principal ─────────────────────────────────────────────────────
