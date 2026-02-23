@@ -165,7 +165,7 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
 
           {formData.width && formData.height && formData.rows && formData.columns && (
             <div className="bg-[#E0F2E9] border-2 border-[#CEB5A7]/50 rounded-2xl p-4">
-              <h4 className="text-sm font-bold text-[#5B7B7A] mb-3">📊 Información Calculada</h4>
+              <h4 className="text-sm font-bold text-[#5B7B7A] mb-3">Información Calculada</h4>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="bg-white rounded-xl p-3 border border-[#CEB5A7]/30">
                   <p className="text-[#A17C6B] text-xs mb-1">Total de parcelas</p>
