@@ -53,7 +53,8 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
   const [loading, setLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [checkedRows, setCheckedRows] = useState(new Set());
-  const [newHarvestIds, setNewHarvestIds] = useState(new Set()); // ids recién añadidos → animación
+  const [newHarvestIds, setNewHarvestIds] = useState(new Set());
+  const [mobileTab, setMobileTab] = useState('plots'); // 'plots' | 'harvests'
 
   useEffect(() => {
     if (!uid || !gardenId) return;
@@ -87,7 +88,6 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
           ...prev,
           [key]: [harvestEntry, ...(prev[key] ?? [])],
         }));
-        // Marcar id como nuevo para animación, limpiar tras 1.2s
         setNewHarvestIds((prev) => new Set([...prev, harvestEntry.id]));
         setTimeout(() => {
           setNewHarvestIds((prev) => {
@@ -100,7 +100,6 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
     });
   }, [onReady]);
 
-  // Aplanar parcelas con datos derivados
   const rows = useMemo(() => {
     const result = [];
     for (let r = 0; r < garden.grid.rows; r++) {
@@ -110,7 +109,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
         const harvests = (allHarvests[key] ?? []).slice().sort((a, b) => {
           const da = a.harvestDate?.toDate?.() ?? new Date(0);
           const db = b.harvestDate?.toDate?.() ?? new Date(0);
-          return db - da; // más reciente primero
+          return db - da;
         });
         const totalUnits = harvests.reduce((s, h) => s + (h.units || 0), 0);
         const totalGrams = harvests.reduce((s, h) => s + (h.totalGrams || 0), 0);
@@ -125,7 +124,6 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
     return result;
   }, [garden, allHarvests]);
 
-  // Lista global de recolecciones ordenada por fecha desc
   const allHarvestsSorted = useMemo(() => {
     const list = [];
     rows.forEach(({ r, c, plant, plantInfo, harvests }) => {
@@ -213,12 +211,43 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
         </div>
       )}
 
+      {/* ── Toggle mobile entre tablas ── */}
+      {allHarvestsSorted.length > 0 && (
+        <div className="flex sm:hidden bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-1 gap-1">
+          <button
+            onClick={() => setMobileTab('plots')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer
+              ${mobileTab === 'plots'
+                ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
+                : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
+          >
+            <IoGridOutline className="w-4 h-4" />
+            Parcelas
+          </button>
+          <button
+            onClick={() => setMobileTab('harvests')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer
+              ${mobileTab === 'harvests'
+                ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
+                : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
+          >
+            <IoBasketOutline className="w-4 h-4" />
+            Recolecciones
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors
+              ${mobileTab === 'harvests' ? 'bg-white/30 text-white' : 'bg-[#5B7B7A]/10 text-[#5B7B7A]'}`}>
+              {allHarvestsSorted.length}
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* ── Layout dos columnas: tabla parcelas | últimas recolecciones ── */}
       <div className="flex gap-5 items-start">
 
         {/* ── Tabla de parcelas (izquierda) ── */}
-        <div className="flex-1 min-w-0 bg-white border-2 border-[#CEB5A7]/40 rounded-3xl overflow-hidden">
-          {/* Cabecera: checkbox | parc. | cultivo | plantado | última cosecha | ud. | peso | expand */}
+        <div className={`flex-1 min-w-0 bg-white border-2 border-[#CEB5A7]/40 rounded-3xl overflow-hidden
+          ${allHarvestsSorted.length > 0 && mobileTab !== 'plots' ? 'hidden sm:block' : ''}`}>
+          {/* Cabecera */}
           <div className="grid grid-cols-[32px_44px_1fr_90px_140px_52px_70px_36px] gap-x-1 px-3 py-3 bg-[#E0F2E9] border-b-2 border-[#CEB5A7]/30 text-xs font-bold text-[#5B7B7A] uppercase tracking-wide items-center">
             <div className="flex justify-center">
               <input type="checkbox" checked={allChecked}
@@ -344,9 +373,11 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
           </div>
         </div>
 
-        {/* ── Últimas recolecciones (derecha, ancho fijo) ── */}
+        {/* ── Últimas recolecciones (derecha en desktop, tab en mobile) ── */}
         {allHarvestsSorted.length > 0 && (
-          <div className="w-72 shrink-0 bg-white border-2 border-[#CEB5A7]/40 rounded-3xl overflow-hidden sticky top-24 max-h-[calc(100vh-8rem)] flex flex-col">
+          <div className={`bg-white border-2 border-[#CEB5A7]/40 rounded-3xl overflow-hidden flex flex-col
+            w-full sm:w-72 sm:shrink-0 sm:sticky sm:top-24 sm:max-h-[calc(100vh-8rem)]
+            ${mobileTab !== 'harvests' ? 'hidden sm:flex' : 'flex'}`}>
             <div className="px-4 py-3 bg-[#E0F2E9] border-b-2 border-[#CEB5A7]/30 flex items-center gap-2 shrink-0">
               <IoBasketOutline className="w-4 h-4 text-[#5B7B7A]" />
               <h3 className="text-xs font-bold text-[#5B7B7A] uppercase tracking-wide">Últimas recolecciones</h3>
@@ -394,7 +425,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const [gardenTotals, setGardenTotals] = useState({ totalUnits: 0, totalGrams: 0 });
   const [viewMode, setViewMode] = useState('table'); // 'grid' | 'table'
   const [tableRefreshKey, setTableRefreshKey] = useState(0);
-  const tableApiRef = useRef(null); // expuesto por TableView vía onReady
+  const tableApiRef = useRef(null);
 
   // ====== BULK ACCIONES VISTA TABLA ======
   const [tableBulkCells, setTableBulkCells] = useState(new Set());
@@ -648,13 +679,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       setSavingCell(true);
       const savedEntry = await addHarvestUseCase(uid, garden.id, selectedCell.row, selectedCell.col, harvestInfo);
 
-      // Actualizar totales del header
       setGardenTotals((prev) => ({
         totalUnits: Math.max(0, (prev.totalUnits || 0) + (harvestInfo.units || 0)),
         totalGrams: Math.max(0, (prev.totalGrams || 0) + (harvestInfo.totalGrams || 0)),
       }));
 
-      // Actualización optimista de la tabla — sin recargar nada
       if (tableApiRef.current?.addHarvest) {
         const entry = {
           id: savedEntry?.id ?? `optimistic_${Date.now()}`,
@@ -841,30 +870,30 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   </p>
                 </div>
 
-                {/* Toggle aquí */}
+                {/* Toggle vista */}
                 <div className="flex items-center bg-white border-2 border-[#CEB5A7]/40 rounded-xl p-1 gap-1">
-
-                  <HoverTooltip label="Vista cuadrícula" mode="auto">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer
-            ${viewMode === 'grid'
-                          ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
-                          : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
-                    >
-                      <IoGridOutline className="w-5 h-5" />
-                    </button>
-                  </HoverTooltip>
 
                   <HoverTooltip label="Vista tabla" mode="auto">
                     <button
                       onClick={() => setViewMode('table')}
                       className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer
-            ${viewMode === 'table'
+                        ${viewMode === 'table'
                           ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
                           : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
                     >
                       <IoListOutline className="w-5 h-5" />
+                    </button>
+                  </HoverTooltip>
+                  
+                  <HoverTooltip label="Vista cuadrícula" mode="auto">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer
+                        ${viewMode === 'grid'
+                          ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
+                          : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
+                    >
+                      <IoGridOutline className="w-5 h-5" />
                     </button>
                   </HoverTooltip>
 
@@ -876,8 +905,6 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
             {/* Derecha: eliminar */}
             <div className="flex items-center gap-2">
-
-              {/* Eliminar huerto */}
               <HoverTooltip label="Eliminar huerto" mode="auto" className="inline-flex">
                 <button
                   onClick={() => setShowDeleteGardenConfirm(true)}
@@ -896,7 +923,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-6xl mx-auto">
 
-          {/* Info Cards — siempre visibles */}
+          {/* Info Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-2xl p-4 text-white flex flex-col items-center justify-center text-center min-h-[96px]">
               <div className="flex items-center justify-center gap-2 mb-1">
