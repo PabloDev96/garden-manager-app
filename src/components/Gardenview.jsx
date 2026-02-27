@@ -19,7 +19,6 @@ import HoverTooltip from './HoverTooltip';
 import useCellSize from '../utils/calculateCellSize';
 import useGridSelection from "../utils/useGridSelection";
 
-// Use cases
 import addCropUseCase from '../services/gardens/addCropUseCase';
 import removeCropUseCase from '../services/gardens/removeCropUseCase';
 import addHarvestUseCase from '../services/gardens/addHarvestUseCase';
@@ -54,7 +53,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [checkedRows, setCheckedRows] = useState(new Set());
   const [newHarvestIds, setNewHarvestIds] = useState(new Set());
-  const [mobileTab, setMobileTab] = useState('plots'); // 'plots' | 'harvests'
+  const [mobileTab, setMobileTab] = useState('plots');
 
   useEffect(() => {
     if (!uid || !gardenId) return;
@@ -78,7 +77,6 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
     load();
   }, [uid, gardenId, garden.grid.rows, garden.grid.columns, refreshKey]);
 
-  // Expone función de actualización optimista al padre
   useEffect(() => {
     if (!onReady) return;
     onReady({
@@ -127,9 +125,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
   const allHarvestsSorted = useMemo(() => {
     const list = [];
     rows.forEach(({ r, c, plant, plantInfo, harvests }) => {
-      harvests.forEach((h) => {
-        list.push({ ...h, r, c, plant, plantInfo });
-      });
+      harvests.forEach((h) => list.push({ ...h, r, c, plant, plantInfo }));
     });
     return list.sort((a, b) => {
       const da = a.harvestDate?.toDate?.() ?? new Date(0);
@@ -159,12 +155,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
     });
   };
   const clearChecked = () => setCheckedRows(new Set());
-
-  const checkedCells = useMemo(() => {
-    const s = new Set();
-    checkedRows.forEach((k) => s.add(k));
-    return s;
-  }, [checkedRows]);
+  const checkedCells = useMemo(() => { const s = new Set(); checkedRows.forEach((k) => s.add(k)); return s; }, [checkedRows]);
 
   const fmtGrams = (g) => g < 1000 ? `${Math.round(g)}g` : `${(g / 1000).toFixed(1)}kg`;
   const fmtDate = (d) => d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' });
@@ -186,82 +177,80 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
       <style>{`
         @keyframes harvestIn {
           from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .harvest-new {
-          animation: harvestIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
-        }
+        .harvest-new { animation: harvestIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards; }
       `}</style>
 
-      {/* ── Barra de acciones sobre selección ── */}
+      {/* Barra bulk */}
       {checkedRows.size > 0 && (
-        <div className="flex flex-wrap items-center gap-3 bg-white border-2 border-[#5B7B7A]/30 rounded-2xl px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 bg-white border-2 border-[#5B7B7A]/30 rounded-2xl px-4 py-3">
           <span className="text-sm font-bold text-[#5B7B7A]">{checkedRows.size} seleccionadas</span>
           <button onClick={() => onBulkAction('plant', checkedCells)} disabled={processingBulk}
             className="flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer">
-            <GiPlantSeed className="w-4 h-4" />Plantar selección
+            <GiPlantSeed className="w-4 h-4" />Plantar
           </button>
           <button onClick={() => onBulkAction('delete', checkedCells)} disabled={processingBulk}
             className="flex items-center gap-2 px-3 py-2 bg-white border-2 border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 transition-all disabled:opacity-50 cursor-pointer">
-            <IoTrashOutline className="w-4 h-4" />Eliminar selección
+            <IoTrashOutline className="w-4 h-4" />Eliminar
           </button>
-          <button onClick={clearChecked} className="ml-auto text-xs text-[#A17C6B] hover:text-[#5B7B7A] underline cursor-pointer">
-            Limpiar
-          </button>
+          <button onClick={clearChecked} className="ml-auto text-xs text-[#A17C6B] hover:text-[#5B7B7A] underline cursor-pointer">Limpiar</button>
         </div>
       )}
 
-      {/* ── Toggle mobile entre tablas ── */}
+      {/* Toggle mobile */}
       {allHarvestsSorted.length > 0 && (
         <div className="flex sm:hidden bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-1 gap-1">
-          <button
-            onClick={() => setMobileTab('plots')}
+          <button onClick={() => setMobileTab('plots')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer
-              ${mobileTab === 'plots'
-                ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
-                : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
-          >
-            <IoGridOutline className="w-4 h-4" />
-            Parcelas
+              ${mobileTab === 'plots' ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}>
+            <IoGridOutline className="w-4 h-4" />Parcelas
           </button>
-          <button
-            onClick={() => setMobileTab('harvests')}
+          <button onClick={() => setMobileTab('harvests')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer
-              ${mobileTab === 'harvests'
-                ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
-                : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
-          >
-            <IoBasketOutline className="w-4 h-4" />
-            Recolecciones
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors
-              ${mobileTab === 'harvests' ? 'bg-white/30 text-white' : 'bg-[#5B7B7A]/10 text-[#5B7B7A]'}`}>
+              ${mobileTab === 'harvests' ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}>
+            <IoBasketOutline className="w-4 h-4" />Recolecciones
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${mobileTab === 'harvests' ? 'bg-white/30 text-white' : 'bg-[#5B7B7A]/10 text-[#5B7B7A]'}`}>
               {allHarvestsSorted.length}
             </span>
           </button>
         </div>
       )}
 
-      {/* ── Layout dos columnas: tabla parcelas | últimas recolecciones ── */}
       <div className="flex gap-5 items-start">
 
-        {/* ── Tabla de parcelas (izquierda) ── */}
-        <div className={`flex-1 min-w-0 bg-white border-2 border-[#CEB5A7]/40 rounded-3xl overflow-hidden
+        {/* ── TABLA DE PARCELAS ── */}
+        <div className={`flex-1 min-w-0 bg-white border-2 border-[#5B7B7A]/50 rounded-3xl overflow-hidden
           ${allHarvestsSorted.length > 0 && mobileTab !== 'plots' ? 'hidden sm:block' : ''}`}>
-          {/* Cabecera */}
-          <div className="grid grid-cols-[32px_44px_1fr_90px_140px_52px_70px_36px] gap-x-1 px-3 py-3 bg-[#E0F2E9] border-b-2 border-[#CEB5A7]/30 text-xs font-bold text-[#5B7B7A] uppercase tracking-wide items-center">
+
+          {/* ── CABECERA (solo desktop) ── */}
+          <div className="hidden sm:grid sm:grid-cols-[32px_44px_1fr_90px_140px_52px_70px_36px] gap-x-1 px-3 py-3 border-b-2 border-[#4a6968]/40 text-xs font-bold text-white uppercase tracking-wide items-center"
+            style={{ background: 'linear-gradient(135deg, #5B7B7A 0%, #4a6968 60%, #A17C6B 100%)' }}>
             <div className="flex justify-center">
               <input type="checkbox" checked={allChecked}
                 ref={(el) => { if (el) el.indeterminate = someChecked; }}
                 onChange={toggleAll}
-                className="w-4 h-4 rounded border-2 border-[#5B7B7A] accent-[#5B7B7A] cursor-pointer" />
+                className="w-4 h-4 rounded border-2 border-white/50 accent-white cursor-pointer" />
             </div>
-            <span>Parc.</span>
-            <span>Cultivo</span>
-            <span>Plantado</span>
-            <span>Última</span>
-            <span className="text-center">Ud.</span>
-            <span className="text-center">Peso</span>
+            <span className="opacity-90">Parc.</span>
+            <span className="opacity-90">Cultivo</span>
+            <span className="opacity-90">Plantado</span>
+            <span className="opacity-90">Última cosecha</span>
+            <span className="text-center opacity-90">Ud.</span>
+            <span className="text-center opacity-90">Peso</span>
             <span />
+          </div>
+
+          {/* ── CABECERA MOBILE: checkbox global + label ── */}
+          <div className="flex sm:hidden items-center gap-3 px-4 py-3 border-b-2 border-[#4a6968]/40"
+            style={{ background: 'linear-gradient(135deg, #5B7B7A 0%, #4a6968 60%, #A17C6B 100%)' }}>
+            <input type="checkbox" checked={allChecked}
+              ref={(el) => { if (el) el.indeterminate = someChecked; }}
+              onChange={toggleAll}
+              className="w-4 h-4 rounded border-2 border-white/50 accent-white cursor-pointer" />
+            <span className="text-xs font-bold text-white uppercase tracking-wide">
+              {checkedRows.size > 0 ? `${checkedRows.size} seleccionadas` : `${rows.length} parcelas`}
+            </span>
           </div>
 
           <div className="divide-y divide-[#CEB5A7]/20">
@@ -271,87 +260,126 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
               const lastDate = lastHarvest?.harvestDate?.toDate?.() ?? null;
 
               return (
-                <div key={key} className={isChecked ? 'bg-[#E0F2E9]/50' : ''}>
-                  <div className="grid grid-cols-[32px_44px_1fr_90px_140px_52px_70px_36px] gap-x-1 px-3 py-2.5 items-center transition-colors hover:bg-[#E0F2E9]/30">
+                <div key={key} className={isChecked ? 'bg-[#E0F2E9]/40' : ''}>
 
-                    {/* Checkbox */}
+                  {/* ── FILA DESKTOP ── */}
+                  <div className="hidden sm:grid sm:grid-cols-[32px_44px_1fr_90px_140px_52px_70px_36px] gap-x-1 px-3 py-2.5 items-center transition-colors hover:bg-[#E0F2E9]/30">
                     <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={isChecked} onChange={(e) => toggleCheck(key, e)}
                         className="w-4 h-4 rounded border-2 border-[#CEB5A7] accent-[#5B7B7A] cursor-pointer" />
                     </div>
-
-                    {/* Coordenada */}
                     <span className="text-xs font-mono font-bold text-[#A17C6B]">{r},{c}</span>
-
-                    {/* Cultivo */}
                     <div className="flex items-center gap-1.5 min-w-0 cursor-pointer" onClick={() => onCellClick(r, c)}>
                       {plantInfo ? (
-                        <>
-                          <span className="text-base shrink-0">{plantInfo.emoji}</span>
-                          <span className="text-xs font-semibold text-[#3D5A59] truncate">{plantInfo.name}</span>
-                        </>
+                        <><span className="text-base shrink-0">{plantInfo.emoji}</span><span className="text-xs font-semibold text-[#3D5A59] truncate">{plantInfo.name}</span></>
                       ) : (
-                        <span className="flex items-center gap-1 text-xs text-[#A17C6B] italic hover:text-[#5B7B7A] transition-colors">
+                        <span className="flex items-center gap-1 text-xs text-[#A17C6B] italic hover:text-[#5B7B7A]">
                           <IoAddOutline className="w-3 h-3" />Añadir
                         </span>
                       )}
                     </div>
-
-                    {/* Fecha plantación */}
-                    <span className="text-xs text-[#A17C6B]">
-                      {plant?.plantedDate ? fmtDate(new Date(plant.plantedDate)) : '—'}
-                    </span>
-
-                    {/* Última cosecha */}
-                    <div className="min-w-0">
+                    <span className="text-xs text-[#A17C6B]">{plant?.plantedDate ? fmtDate(new Date(plant.plantedDate)) : '—'}</span>
+                    <div>
                       {lastHarvest && lastDate ? (
-                        <div className="flex flex-col gap-0">
+                        <div className="flex flex-col">
                           <span className="text-xs font-semibold text-[#3D5A59] leading-tight">{fmtDate(lastDate)}</span>
-                          <span className="text-[10px] text-[#A17C6B] leading-tight">
-                            {lastHarvest.units}ud{lastHarvest.totalGrams > 0 ? ` · ${fmtGrams(lastHarvest.totalGrams)}` : ''}
-                          </span>
+                          <span className="text-[10px] text-[#A17C6B]">{lastHarvest.units}ud{lastHarvest.totalGrams > 0 ? ` · ${fmtGrams(lastHarvest.totalGrams)}` : ''}</span>
                         </div>
-                      ) : (
-                        <span className="text-xs text-[#CEB5A7]">—</span>
-                      )}
+                      ) : <span className="text-xs text-[#CEB5A7]">—</span>}
                     </div>
-
-                    {/* Total unidades */}
                     <div className="text-center">
-                      {totalUnits > 0
-                        ? <span className="text-xs font-bold text-[#5B7B7A]">{totalUnits}</span>
-                        : <span className="text-xs text-[#CEB5A7]">—</span>}
+                      {totalUnits > 0 ? <span className="text-xs font-bold text-[#5B7B7A]">{totalUnits}</span> : <span className="text-xs text-[#CEB5A7]">—</span>}
                     </div>
-
-                    {/* Peso total */}
                     <div className="text-center">
-                      {totalGrams > 0
-                        ? <span className="text-xs font-bold text-[#5B7B7A]">{fmtGrams(totalGrams)}</span>
-                        : <span className="text-xs text-[#CEB5A7]">—</span>}
+                      {totalGrams > 0 ? <span className="text-xs font-bold text-[#5B7B7A]">{fmtGrams(totalGrams)}</span> : <span className="text-xs text-[#CEB5A7]">—</span>}
                     </div>
-
-                    {/* Expandir */}
                     <div className="flex justify-center">
-                      {harvests.length > 0 ? (
+                      {harvests.length > 0 && (
                         <button onClick={(e) => { e.stopPropagation(); toggleRow(key); }}
-                          className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-[#E0F2E9] transition-colors text-[#5B7B7A] cursor-pointer">
+                          className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-[#E0F2E9] text-[#5B7B7A] cursor-pointer">
                           {isExpanded ? <IoChevronUpOutline className="w-3.5 h-3.5" /> : <IoChevronDownOutline className="w-3.5 h-3.5" />}
                         </button>
-                      ) : null}
+                      )}
                     </div>
                   </div>
 
-                  {/* Historial expandido */}
+                  {/* ── FILA MOBILE: tarjeta ── */}
+                  <div className="flex sm:hidden items-start gap-3 px-4 py-3">
+                    {/* Checkbox */}
+                    <div className="pt-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" checked={isChecked} onChange={(e) => toggleCheck(key, e)}
+                        className="w-4 h-4 rounded border-2 border-[#CEB5A7] accent-[#5B7B7A] cursor-pointer" />
+                    </div>
+
+                    {/* Contenido principal */}
+                    <div className="flex-1 min-w-0" onClick={() => onCellClick(r, c)}>
+                      {/* Fila superior: emoji + nombre + coordenada */}
+                      <div className="flex items-center gap-2 mb-1">
+                        {plantInfo ? (
+                          <>
+                            <span className="text-xl shrink-0">{plantInfo.emoji}</span>
+                            <span className="text-sm font-bold text-[#3D5A59] truncate">{plantInfo.name}</span>
+                          </>
+                        ) : (
+                          <span className="flex items-center gap-1 text-sm text-[#A17C6B] italic">
+                            <IoAddOutline className="w-4 h-4" />Añadir cultivo
+                          </span>
+                        )}
+                        <span className="ml-auto text-[10px] font-mono font-bold text-[#A17C6B] shrink-0 bg-[#E0F2E9] px-1.5 py-0.5 rounded-md">
+                          {r},{c}
+                        </span>
+                      </div>
+
+                      {/* Fila de stats */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        {plant?.plantedDate && (
+                          <span className="text-[11px] text-[#A17C6B]">
+                            🌱 {fmtDate(new Date(plant.plantedDate))}
+                          </span>
+                        )}
+                        {totalUnits > 0 && (
+                          <span className="text-[11px] font-semibold text-[#5B7B7A]">
+                            <IoBasketOutline className="inline w-3 h-3 mr-0.5" />{totalUnits} ud
+                          </span>
+                        )}
+                        {totalGrams > 0 && (
+                          <span className="text-[11px] font-semibold text-[#5B7B7A]">
+                            <IoScaleOutline className="inline w-3 h-3 mr-0.5" />{fmtGrams(totalGrams)}
+                          </span>
+                        )}
+                        {lastHarvest && lastDate && (
+                          <span className="text-[11px] text-[#A17C6B]">
+                            Última: {fmtDate(lastDate)}
+                          </span>
+                        )}
+                        {!plant && !totalUnits && (
+                          <span className="text-[11px] text-[#CEB5A7]">Sin datos</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Botón expandir */}
+                    {harvests.length > 0 && (
+                      <button onClick={(e) => { e.stopPropagation(); toggleRow(key); }}
+                        className="shrink-0 w-7 h-7 flex items-center justify-center rounded-xl bg-[#E0F2E9] text-[#5B7B7A] cursor-pointer mt-0.5">
+                        {isExpanded ? <IoChevronUpOutline className="w-4 h-4" /> : <IoChevronDownOutline className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Historial expandido (compartido mobile+desktop) */}
                   {isExpanded && harvests.length > 0 && (
-                    <div className="bg-[#E0F2E9]/30 border-t border-[#CEB5A7]/20 px-3 py-2.5">
+                    <div className="bg-[#E0F2E9]/30 border-t border-[#CEB5A7]/20 px-3 sm:px-4 py-3">
                       <p className="text-xs font-bold text-[#5B7B7A] uppercase tracking-wide mb-2">Historial</p>
                       <div className="space-y-1.5">
                         {harvests.map((h) => {
                           const date = h.harvestDate?.toDate?.() || new Date();
                           return (
-                            <div key={h.id} className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 border border-[#CEB5A7]/30 transition-colors duration-500 ${newHarvestIds.has(h.id) ? 'bg-[#E0F2E9] shadow-sm harvest-new' : 'bg-white'}`}>
+                            <div key={h.id}
+                              className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 border border-[#CEB5A7]/30 transition-colors duration-500
+                                ${newHarvestIds.has(h.id) ? 'bg-[#E0F2E9] shadow-sm harvest-new' : 'bg-white'}`}>
                               <span className="text-[#A17C6B] text-[11px]">{fmtDateTime(date)}</span>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 sm:gap-3">
                                 <span className="text-xs font-semibold text-[#3D5A59]">
                                   <IoBasketOutline className="inline w-3 h-3 mr-0.5 text-[#5B7B7A]" />{h.units} ud
                                 </span>
@@ -373,21 +401,24 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
           </div>
         </div>
 
-        {/* ── Últimas recolecciones (derecha en desktop, tab en mobile) ── */}
+        {/* ── ÚLTIMAS RECOLECCIONES ── */}
         {allHarvestsSorted.length > 0 && (
-          <div className={`bg-white border-2 border-[#CEB5A7]/40 rounded-3xl overflow-hidden flex flex-col
+          <div className={`bg-white border-2 border-[#5B7B7A]/50 rounded-3xl overflow-hidden flex flex-col
             w-full sm:w-72 sm:shrink-0 sm:sticky sm:top-24 sm:max-h-[calc(100vh-8rem)]
             ${mobileTab !== 'harvests' ? 'hidden sm:flex' : 'flex'}`}>
-            <div className="px-4 py-3 bg-[#E0F2E9] border-b-2 border-[#CEB5A7]/30 flex items-center gap-2 shrink-0">
-              <IoBasketOutline className="w-4 h-4 text-[#5B7B7A]" />
-              <h3 className="text-xs font-bold text-[#5B7B7A] uppercase tracking-wide">Últimas recolecciones</h3>
-              <span className="ml-auto text-xs text-[#A17C6B] font-medium">{allHarvestsSorted.length}</span>
+            <div className="px-4 py-3 border-b-2 border-[#4a6968]/40 flex items-center gap-2 shrink-0"
+              style={{ background: 'linear-gradient(135deg, #5B7B7A 0%, #4a6968 60%, #A17C6B 100%)' }}>
+              <IoBasketOutline className="w-4 h-4 text-white" />
+              <h3 className="text-xs font-bold text-white uppercase tracking-wide">Últimas recolecciones</h3>
+              <span className="ml-auto text-xs text-white/70 font-medium">{allHarvestsSorted.length}</span>
             </div>
             <div className="overflow-y-auto flex-1 divide-y divide-[#CEB5A7]/20">
               {allHarvestsSorted.map((h, i) => {
                 const date = h.harvestDate?.toDate?.() || new Date();
                 return (
-                  <div key={h.id ?? i} className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors duration-500 ${newHarvestIds.has(h.id) ? 'bg-[#E0F2E9] harvest-new' : 'hover:bg-[#E0F2E9]/30'}`}>
+                  <div key={h.id ?? i}
+                    className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors duration-500
+                      ${newHarvestIds.has(h.id) ? 'bg-[#E0F2E9] harvest-new' : 'hover:bg-[#E0F2E9]/30'}`}>
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#E0F2E9] shrink-0 text-sm">
                       {h.plantInfo?.emoji ?? <IoLeafOutline className="w-3.5 h-3.5 text-[#5B7B7A]" />}
                     </div>
@@ -400,11 +431,9 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                       </div>
                       <span className="text-[10px] text-[#A17C6B]">{fmtDateTime(date)}</span>
                     </div>
-                    <div className="flex flex-col items-end shrink-0 gap-0">
+                    <div className="flex flex-col items-end shrink-0">
                       <span className="text-xs font-bold text-[#5B7B7A]">{h.units} ud</span>
-                      {h.totalGrams > 0 && (
-                        <span className="text-[10px] text-[#A17C6B]">{fmtGrams(h.totalGrams)}</span>
-                      )}
+                      {h.totalGrams > 0 && <span className="text-[10px] text-[#A17C6B]">{fmtGrams(h.totalGrams)}</span>}
                     </div>
                   </div>
                 );
@@ -423,38 +452,22 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const [showPlantModal, setShowPlantModal] = useState(false);
   const [savingCell, setSavingCell] = useState(false);
   const [gardenTotals, setGardenTotals] = useState({ totalUnits: 0, totalGrams: 0 });
-  const [viewMode, setViewMode] = useState('table'); // 'grid' | 'table'
+  const [viewMode, setViewMode] = useState('table');
   const [tableRefreshKey, setTableRefreshKey] = useState(0);
   const tableApiRef = useRef(null);
 
-  // ====== BULK ACCIONES VISTA TABLA ======
   const [tableBulkCells, setTableBulkCells] = useState(new Set());
   const [showTablePlantModal, setShowTablePlantModal] = useState(false);
   const [showTableDeleteConfirm, setShowTableDeleteConfirm] = useState(false);
-
-  // ====== CONFIRM ELIMINAR HUERTO ======
   const [showDeleteGardenConfirm, setShowDeleteGardenConfirm] = useState(false);
   const [deletingGarden, setDeletingGarden] = useState(false);
-
-  // ====== PLANTAR TODO / ELIMINAR TODO ======
   const [showPlantAllModal, setShowPlantAllModal] = useState(false);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [processingBulk, setProcessingBulk] = useState(false);
   const [loadingToast, setLoadingToast] = useState(null);
 
-  // ====== SELECCIÓN POR ARRASTRE ======
   const gridWrapRef = useRef(null);
-  const {
-    selectedCells,
-    isSelecting,
-    justDragged,
-    overlayStyle,
-    cellRefs,
-    keyOf,
-    handlers,
-    clearSelection,
-    wasDragRef,
-  } = useGridSelection({ gridWrapRef });
+  const { selectedCells, isSelecting, overlayStyle, cellRefs, keyOf, handlers, clearSelection, wasDragRef } = useGridSelection({ gridWrapRef });
 
   const confirmDeleteGarden = async () => {
     try {
@@ -478,8 +491,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       let plantedCount = 0;
       for (let row = 0; row < garden.grid.rows; row++) {
         for (let col = 0; col < garden.grid.columns; col++) {
-          const currentPlant = garden.plants[row]?.[col];
-          if (!currentPlant) {
+          if (!garden.plants[row]?.[col]) {
             const plantId = `${Date.now()}_${row}_${col}_${Math.random().toString(16).slice(2)}`;
             await addCropUseCase(uid, garden.id, row, col, { ...plantData, id: plantId });
             plantedCount++;
@@ -503,26 +515,16 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     setLoadingToast('Eliminando cultivos...');
     try {
       setProcessingBulk(true);
-      let deletedCount = 0;
-      let totalRemovedUnits = 0;
-      let totalRemovedGrams = 0;
+      let deletedCount = 0, totalRemovedUnits = 0, totalRemovedGrams = 0;
       for (let row = 0; row < garden.grid.rows; row++) {
         for (let col = 0; col < garden.grid.columns; col++) {
-          const currentPlant = garden.plants[row]?.[col];
-          if (currentPlant) {
+          if (garden.plants[row]?.[col]) {
             const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(uid, garden.id, row, col, { deleteHistory });
-            totalRemovedUnits += removedUnits;
-            totalRemovedGrams += removedGrams;
-            deletedCount++;
+            totalRemovedUnits += removedUnits; totalRemovedGrams += removedGrams; deletedCount++;
           }
         }
       }
-      if (deleteHistory) {
-        setGardenTotals((prev) => ({
-          totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
-          totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
-        }));
-      }
+      if (deleteHistory) setGardenTotals((prev) => ({ totalUnits: Math.max(0, prev.totalUnits - totalRemovedUnits), totalGrams: Math.max(0, prev.totalGrams - totalRemovedGrams) }));
       setShowDeleteAllConfirm(false);
       clearSelection();
       await onUpdate();
@@ -537,7 +539,6 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     }
   };
 
-  // ====== ACCIONES EN CELDAS SELECCIONADAS ======
   const [showPlantSelectedModal, setShowPlantSelectedModal] = useState(false);
   const [showDeleteSelectedConfirm, setShowDeleteSelectedConfirm] = useState(false);
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
@@ -546,12 +547,10 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
   const handlePlantSelected = async (plantData) => {
     if (!uid || !garden || selectedCells.size === 0) return;
-    let emptyCount = 0;
-    let occupiedCount = 0;
+    let emptyCount = 0, occupiedCount = 0;
     for (const cellKey of selectedCells) {
-      const [rowStr, colStr] = cellKey.split('-');
-      const currentPlant = garden.plants[parseInt(rowStr, 10)]?.[parseInt(colStr, 10)];
-      currentPlant ? occupiedCount++ : emptyCount++;
+      const [r, c] = cellKey.split('-');
+      garden.plants[parseInt(r)]?.[parseInt(c)] ? occupiedCount++ : emptyCount++;
     }
     if (occupiedCount > 0) {
       setPendingPlantData(plantData);
@@ -568,19 +567,14 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     setLoadingToast('Plantando cultivos...');
     try {
       setProcessingBulk(true);
-      let plantedCount = 0;
-      let overwrittenCount = 0;
-      let totalRemovedUnits = 0;
-      let totalRemovedGrams = 0;
+      let plantedCount = 0, overwrittenCount = 0, totalRemovedUnits = 0, totalRemovedGrams = 0;
       for (const cellKey of selectedCells) {
         const [rowStr, colStr] = cellKey.split('-');
-        const row = parseInt(rowStr, 10);
-        const col = parseInt(colStr, 10);
+        const row = parseInt(rowStr), col = parseInt(colStr);
         const currentPlant = garden.plants[row]?.[col];
         if (currentPlant) {
           const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(uid, garden.id, row, col, { deleteHistory });
-          totalRemovedUnits += removedUnits;
-          totalRemovedGrams += removedGrams;
+          totalRemovedUnits += removedUnits; totalRemovedGrams += removedGrams;
           await addCropUseCase(uid, garden.id, row, col, plantData);
           overwrittenCount++;
         } else {
@@ -588,24 +582,14 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           plantedCount++;
         }
       }
-      if (deleteHistory && overwrittenCount > 0) {
-        setGardenTotals((prev) => ({
-          totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
-          totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
-        }));
-      }
+      if (deleteHistory && overwrittenCount > 0) setGardenTotals((prev) => ({ totalUnits: Math.max(0, prev.totalUnits - totalRemovedUnits), totalGrams: Math.max(0, prev.totalGrams - totalRemovedGrams) }));
       setShowPlantSelectedModal(false);
       setShowOverwriteConfirm(false);
       setPendingPlantData(null);
       clearSelection();
       await onUpdate();
       setLoadingToast(null);
-      notify.success({
-        title: 'Plantación completada',
-        description: overwrittenCount > 0
-          ? `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} nuevas, ${overwrittenCount} sobrescritas`
-          : `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas`,
-      });
+      notify.success({ title: 'Plantación completada', description: overwrittenCount > 0 ? `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} nuevas, ${overwrittenCount} sobrescritas` : `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${plantedCount} parcelas` });
     } catch (e) {
       console.error(e);
       setLoadingToast(null);
@@ -620,27 +604,17 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     setLoadingToast('Eliminando cultivos...');
     try {
       setProcessingBulk(true);
-      let deletedCount = 0;
-      let totalRemovedUnits = 0;
-      let totalRemovedGrams = 0;
+      let deletedCount = 0, totalRemovedUnits = 0, totalRemovedGrams = 0;
       for (const cellKey of selectedCells) {
         const [rowStr, colStr] = cellKey.split('-');
-        const row = parseInt(rowStr, 10);
-        const col = parseInt(colStr, 10);
+        const row = parseInt(rowStr), col = parseInt(colStr);
         const currentPlant = garden.plants[row]?.[col];
         if (currentPlant) {
           const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(uid, garden.id, row, col, { deleteHistory });
-          totalRemovedUnits += removedUnits;
-          totalRemovedGrams += removedGrams;
-          deletedCount++;
+          totalRemovedUnits += removedUnits; totalRemovedGrams += removedGrams; deletedCount++;
         }
       }
-      if (deleteHistory) {
-        setGardenTotals((prev) => ({
-          totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
-          totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
-        }));
-      }
+      if (deleteHistory) setGardenTotals((prev) => ({ totalUnits: Math.max(0, prev.totalUnits - totalRemovedUnits), totalGrams: Math.max(0, prev.totalGrams - totalRemovedGrams) }));
       setShowDeleteSelectedConfirm(false);
       clearSelection();
       await onUpdate();
@@ -657,15 +631,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
 
   useEffect(() => {
     if (!uid || !garden?.id) return;
-    const loadTotals = async () => {
-      try {
-        const totals = await getGardenTotalsUseCase(uid, garden.id);
-        setGardenTotals(totals);
-      } catch (error) {
-        console.error('Error loading garden totals:', error);
-      }
-    };
-    loadTotals();
+    getGardenTotalsUseCase(uid, garden.id).then(setGardenTotals).catch(console.error);
   }, [uid, garden?.id]);
 
   useEffect(() => {
@@ -678,33 +644,17 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     try {
       setSavingCell(true);
       const savedEntry = await addHarvestUseCase(uid, garden.id, selectedCell.row, selectedCell.col, harvestInfo);
-
-      setGardenTotals((prev) => ({
-        totalUnits: Math.max(0, (prev.totalUnits || 0) + (harvestInfo.units || 0)),
-        totalGrams: Math.max(0, (prev.totalGrams || 0) + (harvestInfo.totalGrams || 0)),
-      }));
-
+      setGardenTotals((prev) => ({ totalUnits: Math.max(0, prev.totalUnits + (harvestInfo.units || 0)), totalGrams: Math.max(0, prev.totalGrams + (harvestInfo.totalGrams || 0)) }));
       if (tableApiRef.current?.addHarvest) {
-        const entry = {
+        tableApiRef.current.addHarvest(selectedCell.row, selectedCell.col, {
           id: savedEntry?.id ?? `optimistic_${Date.now()}`,
-          units: harvestInfo.units,
-          gramsPerUnit: harvestInfo.gramsPerUnit,
-          totalGrams: harvestInfo.totalGrams,
-          harvestDate: { toDate: () => new Date() },
-          plantId: harvestInfo.plantId,
-          plantName: harvestInfo.plantName,
-          plantEmoji: harvestInfo.plantEmoji,
-        };
-        tableApiRef.current.addHarvest(selectedCell.row, selectedCell.col, entry);
+          units: harvestInfo.units, gramsPerUnit: harvestInfo.gramsPerUnit, totalGrams: harvestInfo.totalGrams,
+          harvestDate: { toDate: () => new Date() }, plantId: harvestInfo.plantId, plantName: harvestInfo.plantName, plantEmoji: harvestInfo.plantEmoji,
+        });
       }
-
       setShowPlantModal(false);
       setSelectedCell(null);
-
-      notify.success({
-        title: 'Recolectado',
-        description: `${harvestInfo.plantEmoji || ''} ${harvestInfo.plantName || 'Cultivo'} · ${harvestInfo.units} ud${harvestInfo.totalGrams ? ` · ${Math.round(harvestInfo.totalGrams)}g` : ''}`,
-      });
+      notify.success({ title: 'Recolectado', description: `${harvestInfo.plantEmoji || ''} ${harvestInfo.plantName || 'Cultivo'} · ${harvestInfo.units} ud${harvestInfo.totalGrams ? ` · ${Math.round(harvestInfo.totalGrams)}g` : ''}` });
     } catch (e) {
       console.error(e);
       notify.error({ title: 'Error', description: 'No se pudo registrar la cosecha.' });
@@ -713,58 +663,35 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     }
   };
 
-  // ====== EJECUTAR BULK DESDE VISTA TABLA ======
   const executeBulkFromTable = async (action, cells, plantData = null, deleteHistory = false) => {
     if (!uid || !garden || cells.size === 0) return;
     setLoadingToast(action === 'plant' ? 'Plantando cultivos...' : 'Eliminando cultivos...');
     try {
       setProcessingBulk(true);
-      let count = 0;
-      let totalRemovedUnits = 0;
-      let totalRemovedGrams = 0;
-
+      let count = 0, totalRemovedUnits = 0, totalRemovedGrams = 0;
       for (const cellKey of cells) {
         const [rowStr, colStr] = cellKey.split('-');
-        const row = parseInt(rowStr, 10);
-        const col = parseInt(colStr, 10);
+        const row = parseInt(rowStr), col = parseInt(colStr);
         const currentPlant = garden.plants[row]?.[col];
-
         if (action === 'plant') {
           if (currentPlant) {
             const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(uid, garden.id, row, col, { deleteHistory });
-            totalRemovedUnits += removedUnits;
-            totalRemovedGrams += removedGrams;
+            totalRemovedUnits += removedUnits; totalRemovedGrams += removedGrams;
           }
-          const plantId = `${Date.now()}_${row}_${col}_${Math.random().toString(16).slice(2)}`;
-          await addCropUseCase(uid, garden.id, row, col, { ...plantData, id: plantId });
+          await addCropUseCase(uid, garden.id, row, col, { ...plantData, id: `${Date.now()}_${row}_${col}_${Math.random().toString(16).slice(2)}` });
           count++;
         } else if (action === 'delete' && currentPlant) {
           const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(uid, garden.id, row, col, { deleteHistory });
-          totalRemovedUnits += removedUnits;
-          totalRemovedGrams += removedGrams;
-          count++;
+          totalRemovedUnits += removedUnits; totalRemovedGrams += removedGrams; count++;
         }
       }
-
-      if (deleteHistory) {
-        setGardenTotals((prev) => ({
-          totalUnits: Math.max(0, (prev.totalUnits || 0) - totalRemovedUnits),
-          totalGrams: Math.max(0, (prev.totalGrams || 0) - totalRemovedGrams),
-        }));
-      }
-
-      setShowTablePlantModal(false);
-      setShowTableDeleteConfirm(false);
-      setTableBulkCells(new Set());
+      if (deleteHistory) setGardenTotals((prev) => ({ totalUnits: Math.max(0, prev.totalUnits - totalRemovedUnits), totalGrams: Math.max(0, prev.totalGrams - totalRemovedGrams) }));
+      setShowTablePlantModal(false); setShowTableDeleteConfirm(false); setTableBulkCells(new Set());
       await onUpdate();
       setTableRefreshKey((k) => k + 1);
       setLoadingToast(null);
-
-      if (action === 'plant') {
-        notify.success({ title: 'Plantación completada', description: `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${count} parcelas` });
-      } else {
-        notify.error({ title: 'Eliminación completada', description: `${count} cultivos eliminados` });
-      }
+      if (action === 'plant') notify.success({ title: 'Plantación completada', description: `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'} · ${count} parcelas` });
+      else notify.error({ title: 'Eliminación completada', description: `${count} cultivos eliminados` });
     } catch (e) {
       console.error(e);
       setLoadingToast(null);
@@ -787,11 +714,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       await addCropUseCase(uid, garden.id, selectedCell.row, selectedCell.col, plantData);
       setShowPlantModal(false);
       setSelectedCell(null);
-      const mode = meta?.mode;
-      notify.success({
-        title: mode === 'create' ? 'Cultivo añadido' : mode === 'edit' ? 'Cultivo editado' : 'Cultivo guardado',
-        description: `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'}`,
-      });
+      notify.success({ title: meta?.mode === 'create' ? 'Cultivo añadido' : 'Cultivo editado', description: `${plantData?.emoji || ''} ${plantData?.name || 'Cultivo'}` });
     } catch (e) {
       console.error(e);
       notify.error({ title: 'Error', description: 'No se pudo guardar la planta.' });
@@ -805,20 +728,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     try {
       setSavingCell(true);
       const { removedUnits = 0, removedGrams = 0 } = await removeCropUseCase(uid, garden.id, selectedCell.row, selectedCell.col, options);
-      if (options?.deleteHistory) {
-        setGardenTotals((prev) => ({
-          totalUnits: Math.max(0, (prev.totalUnits || 0) - Math.max(0, removedUnits || 0)),
-          totalGrams: Math.max(0, (prev.totalGrams || 0) - Math.max(0, removedGrams || 0)),
-        }));
-      }
+      if (options?.deleteHistory) setGardenTotals((prev) => ({ totalUnits: Math.max(0, prev.totalUnits - Math.max(0, removedUnits)), totalGrams: Math.max(0, prev.totalGrams - Math.max(0, removedGrams)) }));
       setShowPlantModal(false);
       setSelectedCell(null);
       await onUpdate();
-      notify.error(
-        options?.deleteHistory
-          ? { title: 'Eliminado', description: 'Cultivo + historial borrados' }
-          : { title: 'Cultivo eliminado', description: 'Historial conservado en BD' }
-      );
+      notify.error(options?.deleteHistory ? { title: 'Eliminado', description: 'Cultivo + historial borrados' } : { title: 'Cultivo eliminado', description: 'Historial conservado en BD' });
     } catch (e) {
       console.error(e);
       notify.error({ title: 'Error', description: 'No se pudo eliminar la planta.' });
@@ -830,13 +744,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const currentPlant = selectedCell ? garden.plants[selectedCell.row]?.[selectedCell.col] : null;
   const isMobile = window.matchMedia('(max-width: 640px)').matches;
   const gapPx = 8;
-  const { ref: gridRef, cellSize } = useCellSize({
-    cols: garden.grid.columns,
-    gapPx,
-    preferred: isMobile ? 36 : 100,
-    min: isMobile ? 14 : 18,
-  });
-
+  const { ref: gridRef, cellSize } = useCellSize({ cols: garden.grid.columns, gapPx, preferred: isMobile ? 36 : 100, min: isMobile ? 14 : 18 });
   const emptyCells = garden.plants.flat().filter((p) => p === null).length;
   const plantedCells = garden.plants.flat().filter((p) => p !== null).length;
 
@@ -845,72 +753,35 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
       <Toaster position="top-center" style={{ zIndex: 99999 }} />
       <LoadingToast message={loadingToast} />
 
-      {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-[#CEB5A7]/30 sticky top-0 z-10">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex justify-between items-center gap-3">
-            {/* Izquierda: botón atrás + título */}
             <div className="flex items-center gap-4">
-
-              {/* Botón atrás */}
-              <button
-                onClick={onClose}
-                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all cursor-pointer"
-              >
+              <button onClick={onClose} className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all cursor-pointer">
                 <IoArrowBackOutline className="w-6 h-6 text-white" />
               </button>
-
-              {/* Nombre + toggle */}
               <div className="flex items-center gap-4 flex-wrap">
-
                 <div>
                   <h1 className="text-2xl font-bold text-[#5B7B7A]">{garden.name}</h1>
-                  <p className="text-sm text-[#A17C6B]">
-                    {garden.dimensions.width}m × {garden.dimensions.height}m | {garden.grid.columns}×{garden.grid.rows} parcelas
-                  </p>
+                  <p className="text-sm text-[#A17C6B]">{garden.dimensions.width}m × {garden.dimensions.height}m | {garden.grid.columns}×{garden.grid.rows} parcelas</p>
                 </div>
-
-                {/* Toggle vista */}
                 <div className="flex items-center bg-white border-2 border-[#CEB5A7]/40 rounded-xl p-1 gap-1">
-
-                  <HoverTooltip label="Vista tabla" mode="auto">
-                    <button
-                      onClick={() => setViewMode('table')}
-                      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer
-                        ${viewMode === 'table'
-                          ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
-                          : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
-                    >
-                      <IoListOutline className="w-5 h-5" />
-                    </button>
-                  </HoverTooltip>
-                  
                   <HoverTooltip label="Vista cuadrícula" mode="auto">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer
-                        ${viewMode === 'grid'
-                          ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow'
-                          : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}
-                    >
+                    <button onClick={() => setViewMode('grid')} className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}>
                       <IoGridOutline className="w-5 h-5" />
                     </button>
                   </HoverTooltip>
-
+                  <HoverTooltip label="Vista tabla" mode="auto">
+                    <button onClick={() => setViewMode('table')} className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer ${viewMode === 'table' ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}>
+                      <IoListOutline className="w-5 h-5" />
+                    </button>
+                  </HoverTooltip>
                 </div>
-
               </div>
-
             </div>
-
-            {/* Derecha: eliminar */}
             <div className="flex items-center gap-2">
               <HoverTooltip label="Eliminar huerto" mode="auto" className="inline-flex">
-                <button
-                  onClick={() => setShowDeleteGardenConfirm(true)}
-                  disabled={processingBulk}
-                  className="group flex items-center gap-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 font-medium cursor-pointer"
-                >
+                <button onClick={() => setShowDeleteGardenConfirm(true)} disabled={processingBulk} className="group flex items-center gap-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 font-medium cursor-pointer">
                   <IoTrashOutline className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
                 </button>
               </HoverTooltip>
@@ -919,164 +790,85 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-6xl mx-auto">
-
-          {/* Info Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-2xl p-4 text-white flex flex-col items-center justify-center text-center min-h-[96px]">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <IoGridOutline className="w-4 h-4" />
-                <p className="text-xs opacity-90">Parcelas totales</p>
+            {[
+              { icon: <IoGridOutline className="w-4 h-4" />, label: 'Parcelas totales', value: garden.grid.rows * garden.grid.columns },
+              { icon: <IoLeafOutline className="w-4 h-4" />, label: 'Plantadas', value: plantedCells },
+              { icon: <IoBasketOutline className="w-4 h-4" />, label: 'Unidades cosechadas', value: gardenTotals.totalUnits },
+              {
+                icon: <IoScaleOutline className="w-4 h-4" />, label: 'Peso total',
+                value: gardenTotals.totalGrams <= 0 ? '—' : gardenTotals.totalGrams < 1000 ? `${Math.round(gardenTotals.totalGrams)} g` : `${(gardenTotals.totalGrams / 1000).toFixed(1)} kg`
+              },
+            ].map(({ icon, label, value }, i) => (
+              <div key={i} className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-2xl p-4 text-white flex flex-col items-center justify-center text-center min-h-[96px]">
+                <div className="flex items-center justify-center gap-2 mb-1">{icon}<p className="text-xs opacity-90">{label}</p></div>
+                <p className="text-2xl font-bold">{value}</p>
               </div>
-              <p className="text-2xl font-bold">{garden.grid.rows * garden.grid.columns}</p>
-            </div>
-            <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-2xl p-4 text-white flex flex-col items-center justify-center text-center min-h-[96px]">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <IoLeafOutline className="w-4 h-4" />
-                <p className="text-xs opacity-90">Plantadas</p>
-              </div>
-              <p className="text-2xl font-bold">{plantedCells}</p>
-            </div>
-            <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-2xl p-4 text-white flex flex-col items-center justify-center text-center min-h-[96px]">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <IoBasketOutline className="w-4 h-4" />
-                <p className="text-xs opacity-90">Unidades cosechadas</p>
-              </div>
-              <p className="text-2xl font-bold">{gardenTotals.totalUnits}</p>
-            </div>
-            <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-2xl p-4 text-white flex flex-col items-center justify-center text-center min-h-[96px]">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <IoScaleOutline className="w-4 h-4" />
-                <p className="text-xs opacity-90">Peso total</p>
-              </div>
-              {gardenTotals.totalGrams <= 0 ? (
-                <p className="text-2xl font-bold">—</p>
-              ) : gardenTotals.totalGrams < 1000 ? (
-                <p className="text-2xl font-bold">{Math.round(gardenTotals.totalGrams)} g</p>
-              ) : (
-                <p className="text-2xl font-bold">{(gardenTotals.totalGrams / 1000).toFixed(1)} kg</p>
-              )}
-            </div>
+            ))}
           </div>
 
-          {/* ── Vista cuadrícula ── */}
           {viewMode === 'grid' && (
             <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
               <div className="mb-6 flex flex-col items-center justify-center gap-3">
                 <div className="flex flex-wrap items-center justify-center gap-2 w-full">
                   {emptyCells > 0 && (
-                    <button
-                      onClick={() => setShowPlantAllModal(true)}
-                      disabled={processingBulk}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      <GiPlantSeed className="w-4 h-4" />
-                      <span>Plantar todo</span>
+                    <button onClick={() => setShowPlantAllModal(true)} disabled={processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
+                      <GiPlantSeed className="w-4 h-4" /><span>Plantar todo</span>
                     </button>
                   )}
                   {plantedCells > 0 && (
-                    <button
-                      onClick={() => setShowDeleteAllConfirm(true)}
-                      disabled={processingBulk}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      <IoTrashOutline className="w-4 h-4" />
-                      <span>Eliminar todo</span>
+                    <button onClick={() => setShowDeleteAllConfirm(true)} disabled={processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
+                      <IoTrashOutline className="w-4 h-4" /><span>Eliminar todo</span>
                     </button>
                   )}
                 </div>
-
                 {selectedCells.size > 0 && (
                   <div className="w-full flex flex-col items-center gap-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-sm font-bold text-[#5B7B7A]">Selección: {selectedCells.size}</span>
-                      <button type="button" onClick={clearSelection} className="px-3 py-2 rounded-xl border-2 border-[#CEB5A7] text-[#5B7B7A] hover:bg-[#E0F2E9] font-bold text-sm">
-                        Limpiar
-                      </button>
+                      <button type="button" onClick={clearSelection} className="px-3 py-2 rounded-xl border-2 border-[#CEB5A7] text-[#5B7B7A] hover:bg-[#E0F2E9] font-bold text-sm">Limpiar</button>
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-2">
-                      <button onClick={() => setShowPlantSelectedModal(true)} disabled={processingBulk}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-lg transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
-                        <GiPlantSeed className="w-4 h-4" />
-                        <span>Plantar selección</span>
+                      <button onClick={() => setShowPlantSelectedModal(true)} disabled={processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-lg transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
+                        <GiPlantSeed className="w-4 h-4" /><span>Plantar selección</span>
                       </button>
-                      <button onClick={() => setShowDeleteSelectedConfirm(true)} disabled={processingBulk}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
-                        <IoTrashOutline className="w-4 h-4" />
-                        <span>Eliminar selección</span>
+                      <button onClick={() => setShowDeleteSelectedConfirm(true)} disabled={processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
+                        <IoTrashOutline className="w-4 h-4" /><span>Eliminar selección</span>
                       </button>
                     </div>
                   </div>
                 )}
-
-                {selectedCells.size === 0 && (
-                  <p className="text-sm text-[#A17C6B] text-center">
-                    Click en cada parcela para gestionarla (o arrastra para seleccionar varias)
-                  </p>
-                )}
+                {selectedCells.size === 0 && <p className="text-sm text-[#A17C6B] text-center">Click en cada parcela para gestionarla (o arrastra para seleccionar varias)</p>}
               </div>
 
               <div className="overflow-x-auto">
                 <div className="w-full flex justify-center">
-                  <div
-                    ref={gridWrapRef}
-                    className="relative select-none"
-                    style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
+                  <div ref={gridWrapRef} className="relative select-none" style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
                     onContextMenu={(e) => e.preventDefault()}
-                    onPointerDown={handlers.onPointerDown}
-                    onPointerMove={handlers.onPointerMove}
-                    onPointerUp={handlers.onPointerUp}
-                  >
+                    onPointerDown={handlers.onPointerDown} onPointerMove={handlers.onPointerMove} onPointerUp={handlers.onPointerUp}>
                     <div className="rounded-2xl p-3 bg-[#E0F2E9] border-2 border-[#CEB5A7]/30">
                       <div ref={gridRef} className="grid" style={{ gap: `${gapPx}px`, gridTemplateColumns: `repeat(${garden.grid.columns}, ${cellSize}px)` }}>
                         {garden.plants.map((row, rowIndex) =>
                           row.map((plant, colIndex) => {
                             const hasPlant = plant !== null;
-                            const plantInfo = hasPlant && plant.category && plant.type
-                              ? CROPS_DATABASE[plant.category]?.types[plant.type]
-                              : null;
+                            const plantInfo = hasPlant && plant.category && plant.type ? CROPS_DATABASE[plant.category]?.types[plant.type] : null;
                             const k = keyOf(rowIndex, colIndex);
                             const isSelected = selectedCells.has(k);
-
                             return (
-                              <button
-                                ref={(el) => { cellRefs.current[k] = el; }}
-                                key={k}
-                                onClick={(e) => {
-                                  if (wasDragRef.current) { e.preventDefault(); e.stopPropagation(); return; }
-                                  if (selectedCells.size > 0) return;
-                                  handleCellClick(rowIndex, colIndex);
-                                }}
+                              <button ref={(el) => { cellRefs.current[k] = el; }} key={k}
+                                onClick={(e) => { if (wasDragRef.current) { e.preventDefault(); e.stopPropagation(); return; } if (selectedCells.size > 0) return; handleCellClick(rowIndex, colIndex); }}
                                 disabled={savingCell || processingBulk}
-                                className={`rounded-lg border-2 transition-all relative group
-                                  ${hasPlant ? 'border-2 hover:shadow-lg' : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'}
-                                  ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
-                                  ${isSelected ? 'ring-4 ring-[#5B7B7A]/40 border-[#5B7B7A]' : ''}`}
-                                style={{
-                                  width: cellSize, height: cellSize,
-                                  backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
-                                  borderColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined),
-                                }}
-                                title={`Parcela ${rowIndex}, ${colIndex}`}
-                              >
+                                className={`rounded-lg border-2 transition-all relative group ${hasPlant ? 'border-2 hover:shadow-lg' : 'bg-[#CEB5A7] border-2 border-[#5B7B7A]/50 hover:border-4 hover:border-[#5B7B7A]'} ${savingCell || processingBulk ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${isSelected ? 'ring-4 ring-[#5B7B7A]/40 border-[#5B7B7A]' : ''}`}
+                                style={{ width: cellSize, height: cellSize, backgroundColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined), borderColor: plantInfo?.color || (hasPlant ? '#5B7B7A' : undefined) }}
+                                title={`Parcela ${rowIndex}, ${colIndex}`}>
                                 {hasPlant ? (
                                   <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
                                     {plantInfo ? (
-                                      <>
-                                        <span className="mb-0.5" style={{ fontSize: Math.min(cellSize * 0.5, 32) }}>{plantInfo.emoji}</span>
-                                        <p className="text-white font-bold truncate w-full text-center leading-none drop-shadow-md" style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}>
-                                          {plantInfo.name}
-                                        </p>
-                                      </>
+                                      <><span className="mb-0.5" style={{ fontSize: Math.min(cellSize * 0.5, 32) }}>{plantInfo.emoji}</span><p className="text-white font-bold truncate w-full text-center leading-none drop-shadow-md" style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}>{plantInfo.name}</p></>
                                     ) : (
-                                      <>
-                                        <IoLeafOutline className="text-white mb-0.5" style={{ width: Math.min(16, cellSize * 0.5), height: Math.min(16, cellSize * 0.5) }} />
-                                        <p className="text-[10px] text-white font-bold truncate w-full text-center leading-none" style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}>
-                                          {plant.name}
-                                        </p>
-                                      </>
+                                      <><IoLeafOutline className="text-white mb-0.5" style={{ width: Math.min(16, cellSize * 0.5), height: Math.min(16, cellSize * 0.5) }} /><p className="text-[10px] text-white font-bold truncate w-full text-center leading-none" style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}>{plant.name}</p></>
                                     )}
                                   </div>
                                 ) : (
@@ -1091,96 +883,49 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                         )}
                       </div>
                     </div>
-
-                    {isSelecting && overlayStyle && (
-                      <div className="absolute z-30 border-2 border-[#5B7B7A] bg-[#5B7B7A]/10 rounded-lg pointer-events-none" style={overlayStyle} />
-                    )}
+                    {isSelecting && overlayStyle && <div className="absolute z-30 border-2 border-[#5B7B7A] bg-[#5B7B7A]/10 rounded-lg pointer-events-none" style={overlayStyle} />}
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ── Vista tabla ── */}
           {viewMode === 'table' && (
-            <TableView
-              uid={uid}
-              gardenId={garden.id}
-              garden={garden}
-              onCellClick={handleCellClick}
-              processingBulk={processingBulk}
-              refreshKey={tableRefreshKey}
+            <TableView uid={uid} gardenId={garden.id} garden={garden} onCellClick={handleCellClick}
+              processingBulk={processingBulk} refreshKey={tableRefreshKey}
               onReady={(api) => { tableApiRef.current = api; }}
-              onBulkAction={(action, cells) => {
-                setTableBulkCells(cells);
-                if (action === 'plant') setShowTablePlantModal(true);
-                else if (action === 'delete') setShowTableDeleteConfirm(true);
-              }}
-            />
+              onBulkAction={(action, cells) => { setTableBulkCells(cells); if (action === 'plant') setShowTablePlantModal(true); else if (action === 'delete') setShowTableDeleteConfirm(true); }} />
           )}
         </div>
       </main>
 
-      {/* Plant Modal */}
       {showPlantModal && (
-        <PlantModal
-          uid={uid}
-          gardenId={garden.id}
-          plant={currentPlant}
-          position={selectedCell}
-          saving={savingCell}
+        <PlantModal uid={uid} gardenId={garden.id} plant={currentPlant} position={selectedCell} saving={savingCell}
           onClose={() => { setShowPlantModal(false); setSelectedCell(null); }}
           onSave={(plantData, meta) => handleAddPlant(plantData, meta)}
           onRemove={currentPlant ? (opts) => handleRemovePlant(opts) : null}
-          onHarvest={currentPlant ? handleHarvest : null}
-        />
+          onHarvest={currentPlant ? handleHarvest : null} />
       )}
 
-      {showPlantAllModal && (
-        <PlantAllModal
-          onClose={() => setShowPlantAllModal(false)}
-          onConfirm={handlePlantAll}
-          processing={processingBulk}
-          emptyCells={emptyCells}
-        />
-      )}
+      {showPlantAllModal && <PlantAllModal onClose={() => setShowPlantAllModal(false)} onConfirm={handlePlantAll} processing={processingBulk} emptyCells={emptyCells} />}
 
-      <ConfirmModal
-        isOpen={showDeleteAllConfirm}
-        onClose={() => setShowDeleteAllConfirm(false)}
-        title="Eliminar todos los cultivos"
-        description={`Se eliminarán ${plantedCells} cultivos. ¿Qué quieres hacer con el historial?`}
-        variant="danger"
+      <ConfirmModal isOpen={showDeleteAllConfirm} onClose={() => setShowDeleteAllConfirm(false)} title="Eliminar todos los cultivos"
+        description={`Se eliminarán ${plantedCells} cultivos. ¿Qué quieres hacer con el historial?`} variant="danger"
         actions={[
           { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteAllConfirm(false), disabled: processingBulk },
           { label: 'Eliminar cultivos (mantener historial)', style: 'ghost', onClick: () => handleDeleteAll(false), disabled: processingBulk },
           { label: 'Eliminar cultivos + historial', style: 'danger', onClick: () => handleDeleteAll(true), disabled: processingBulk },
-        ]}
-      />
+        ]} />
 
-      {showPlantSelectedModal && (
-        <PlantAllModal
-          onClose={() => setShowPlantSelectedModal(false)}
-          onConfirm={handlePlantSelected}
-          processing={processingBulk}
-          emptyCells={selectedCells.size}
-          title="Plantar en celdas seleccionadas"
-          message={`Se plantarán las ${selectedCells.size} celdas vacías seleccionadas`}
-        />
-      )}
+      {showPlantSelectedModal && <PlantAllModal onClose={() => setShowPlantSelectedModal(false)} onConfirm={handlePlantSelected} processing={processingBulk} emptyCells={selectedCells.size} title="Plantar en celdas seleccionadas" message={`Se plantarán las ${selectedCells.size} celdas vacías seleccionadas`} />}
 
-      <ConfirmModal
-        isOpen={showDeleteSelectedConfirm}
-        onClose={() => setShowDeleteSelectedConfirm(false)}
-        title="Eliminar cultivos seleccionados"
-        description={`Se eliminarán los cultivos de ${selectedCells.size} parcelas. ¿Qué quieres hacer con el historial?`}
-        variant="danger"
+      <ConfirmModal isOpen={showDeleteSelectedConfirm} onClose={() => setShowDeleteSelectedConfirm(false)} title="Eliminar cultivos seleccionados"
+        description={`Se eliminarán los cultivos de ${selectedCells.size} parcelas. ¿Qué quieres hacer con el historial?`} variant="danger"
         actions={[
           { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteSelectedConfirm(false), disabled: processingBulk },
           { label: 'Eliminar cultivos (mantener historial)', style: 'ghost', onClick: () => handleDeleteSelected(false), disabled: processingBulk },
           { label: 'Eliminar cultivos + historial', style: 'danger', onClick: () => handleDeleteSelected(true), disabled: processingBulk },
-        ]}
-      />
+        ]} />
 
       {showOverwriteConfirm && pendingPlantData && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowOverwriteConfirm(false); setPendingPlantData(null); }}>
@@ -1195,59 +940,30 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
               <p className="text-xs text-[#A17C6B] mt-3">¿Qué quieres hacer con el historial de las {overwriteStats.occupied} parcelas ocupadas?</p>
             </div>
             <div className="mt-4 sm:mt-5 grid grid-cols-1 gap-2 sm:gap-3">
-              <button type="button" onClick={() => { setShowOverwriteConfirm(false); setPendingPlantData(null); }} disabled={processingBulk}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base cursor-pointer">
-                Cancelar
-              </button>
-              <button type="button" onClick={() => executePlantSelected(pendingPlantData, false)} disabled={processingBulk}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold text-sm sm:text-base cursor-pointer">
-                Sobrescribir (mantener historial)
-              </button>
-              <button type="button" onClick={() => executePlantSelected(pendingPlantData, true)} disabled={processingBulk}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-bold text-sm sm:text-base cursor-pointer">
-                Sobrescribir + borrar historial
-              </button>
+              <button type="button" onClick={() => { setShowOverwriteConfirm(false); setPendingPlantData(null); }} disabled={processingBulk} className="w-full px-4 py-2.5 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm cursor-pointer">Cancelar</button>
+              <button type="button" onClick={() => executePlantSelected(pendingPlantData, false)} disabled={processingBulk} className="w-full px-4 py-2.5 border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-bold text-sm cursor-pointer">Sobrescribir (mantener historial)</button>
+              <button type="button" onClick={() => executePlantSelected(pendingPlantData, true)} disabled={processingBulk} className="w-full px-4 py-2.5 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-bold text-sm cursor-pointer">Sobrescribir + borrar historial</button>
             </div>
           </div>
         </div>
       )}
 
-      <ConfirmModal
-        isOpen={showDeleteGardenConfirm}
-        onClose={() => setShowDeleteGardenConfirm(false)}
-        title="Eliminar huerto"
-        description="¿Seguro que quieres eliminar este huerto? Esta acción no se puede deshacer."
-        variant="danger"
+      <ConfirmModal isOpen={showDeleteGardenConfirm} onClose={() => setShowDeleteGardenConfirm(false)} title="Eliminar huerto"
+        description="¿Seguro que quieres eliminar este huerto? Esta acción no se puede deshacer." variant="danger"
         actions={[
           { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteGardenConfirm(false), disabled: deletingGarden },
           { label: 'Eliminar huerto', style: 'danger', onClick: confirmDeleteGarden, disabled: deletingGarden },
-        ]}
-      />
+        ]} />
 
-      {/* ── Modales bulk vista tabla ── */}
-      {showTablePlantModal && (
-        <PlantAllModal
-          onClose={() => { setShowTablePlantModal(false); setTableBulkCells(new Set()); }}
-          onConfirm={(plantData) => executeBulkFromTable('plant', tableBulkCells, plantData, false)}
-          processing={processingBulk}
-          emptyCells={tableBulkCells.size}
-          title="Plantar parcelas seleccionadas"
-          message={`Se plantarán ${tableBulkCells.size} parcelas (las ocupadas se sobrescribirán)`}
-        />
-      )}
+      {showTablePlantModal && <PlantAllModal onClose={() => { setShowTablePlantModal(false); setTableBulkCells(new Set()); }} onConfirm={(plantData) => executeBulkFromTable('plant', tableBulkCells, plantData, false)} processing={processingBulk} emptyCells={tableBulkCells.size} title="Plantar parcelas seleccionadas" message={`Se plantarán ${tableBulkCells.size} parcelas (las ocupadas se sobrescribirán)`} />}
 
-      <ConfirmModal
-        isOpen={showTableDeleteConfirm}
-        onClose={() => { setShowTableDeleteConfirm(false); setTableBulkCells(new Set()); }}
-        title="Eliminar cultivos seleccionados"
-        description={`Se eliminarán los cultivos de ${tableBulkCells.size} parcelas. ¿Qué quieres hacer con el historial?`}
-        variant="danger"
+      <ConfirmModal isOpen={showTableDeleteConfirm} onClose={() => { setShowTableDeleteConfirm(false); setTableBulkCells(new Set()); }} title="Eliminar cultivos seleccionados"
+        description={`Se eliminarán los cultivos de ${tableBulkCells.size} parcelas. ¿Qué quieres hacer con el historial?`} variant="danger"
         actions={[
           { label: 'Cancelar', style: 'cancel', onClick: () => { setShowTableDeleteConfirm(false); setTableBulkCells(new Set()); }, disabled: processingBulk },
           { label: 'Eliminar cultivos (mantener historial)', style: 'ghost', onClick: () => executeBulkFromTable('delete', tableBulkCells, null, false), disabled: processingBulk },
           { label: 'Eliminar cultivos + historial', style: 'danger', onClick: () => executeBulkFromTable('delete', tableBulkCells, null, true), disabled: processingBulk },
-        ]}
-      />
+        ]} />
     </div>
   );
 };
@@ -1257,8 +973,6 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [formData, setFormData] = useState({ plantedDate: new Date().toISOString().split('T')[0], wateringDays: 3 });
-
-  const handleCategoryChange = (e) => { setSelectedCategory(e.target.value); setSelectedType(''); };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1277,23 +991,21 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
               <h3 className="text-lg sm:text-xl font-bold text-[#5B7B7A]">{title}</h3>
               <p className="text-xs sm:text-sm text-[#A17C6B] mt-1">{message || `Se plantarán ${emptyCells} parcelas`}</p>
             </div>
-            <button onClick={onClose} disabled={processing} className={`w-8 h-8 sm:w-10 sm:h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} aria-label="Cerrar">
+            <button onClick={onClose} disabled={processing} className={`w-8 h-8 sm:w-10 sm:h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
               <IoClose className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" />
             </button>
           </div>
         </div>
-
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div>
             <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
-            <select value={selectedCategory} onChange={handleCategoryChange} className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-sm sm:text-base cursor-pointer" required disabled={processing}>
+            <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); setSelectedType(''); }} className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-sm sm:text-base cursor-pointer" required disabled={processing}>
               <option value="">Selecciona una categoría</option>
-              {Object.entries(CROPS_DATABASE).map(([key, data]) => (<option key={key} value={key}>{data.emoji} {data.label}</option>))}
+              {Object.entries(CROPS_DATABASE).map(([key, data]) => <option key={key} value={key}>{data.emoji} {data.label}</option>)}
             </select>
           </div>
-
           {selectedCategory && (
-            <div className="animate-fadeIn">
+            <div>
               <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Tipo de {CROPS_DATABASE[selectedCategory].label}</label>
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {Object.entries(CROPS_DATABASE[selectedCategory].types).map(([key, plantType]) => (
@@ -1308,21 +1020,15 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
               </div>
             </div>
           )}
-
           <div>
             <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Fecha de plantación</label>
             <input type="date" value={formData.plantedDate} onChange={(e) => setFormData({ ...formData, plantedDate: e.target.value })} className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer text-sm sm:text-base" disabled={processing} />
           </div>
-
           <div>
-            <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2">
-              <IoWaterOutline className="w-4 h-4 sm:w-5 sm:h-5" />
-              Riego cada (días)
-            </label>
+            <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2"><IoWaterOutline className="w-4 h-4 sm:w-5 sm:h-5" />Riego cada (días)</label>
             <input type="number" value={formData.wateringDays} onChange={(e) => setFormData({ ...formData, wateringDays: parseInt(e.target.value, 10) })} min="1" max="30" className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer text-sm sm:text-base" disabled={processing} />
           </div>
         </form>
-
         <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-3 sm:p-4">
           <div className="flex gap-2 sm:gap-3">
             <button type="button" onClick={onClose} disabled={processing} className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 border-2 border-[#CEB5A7] text-[#5B7B7A] rounded-xl hover:bg-[#E0F2E9] transition-all font-bold text-sm sm:text-base ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>Cancelar</button>
@@ -1338,8 +1044,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
 
 // ===================== PlantModal =====================
 const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, onRemove, onHarvest }) => {
-  const defaultView = plant ? 'harvest' : 'edit';
-  const [view, setView] = useState(defaultView);
+  const [view, setView] = useState(plant ? 'harvest' : 'edit');
   const [selectedCategory, setSelectedCategory] = useState(plant?.category || '');
   const [selectedType, setSelectedType] = useState(plant?.type || '');
   const [formData, setFormData] = useState({ plantedDate: plant?.plantedDate || new Date().toISOString().split('T')[0], wateringDays: plant?.wateringDays || 3 });
@@ -1349,10 +1054,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
   const [showHistoryDetails, setShowHistoryDetails] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const activePlantId = useMemo(() => {
-    if (plant?.id) return plant.id;
-    return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  }, [plant?.id, position?.row, position?.col]);
+  const activePlantId = useMemo(() => plant?.id || `${Date.now()}_${Math.random().toString(16).slice(2)}`, [plant?.id, position?.row, position?.col]);
 
   useEffect(() => {
     setView(plant ? 'harvest' : 'edit');
@@ -1367,32 +1069,19 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
 
   useEffect(() => {
     if (!uid || !gardenId || position === null) return;
-    const loadHistory = async () => {
-      try {
-        setLoadingHistory(true);
-        const history = await getPlotHarvestsUseCase(uid, gardenId, position.row, position.col);
-        setHarvestHistory(history);
-      } catch (error) {
-        console.error('Error loading harvest history:', error);
-      } finally {
-        setLoadingHistory(false);
-      }
-    };
-    loadHistory();
+    setLoadingHistory(true);
+    getPlotHarvestsUseCase(uid, gardenId, position.row, position.col)
+      .then(setHarvestHistory).catch(console.error).finally(() => setLoadingHistory(false));
   }, [uid, gardenId, position?.row, position?.col]);
 
   const historyTotals = harvestHistory.reduce((acc, h) => ({ units: acc.units + (h.units || 0), grams: acc.grams + (h.totalGrams || 0) }), { units: 0, grams: 0 });
-  const handleCategoryChange = (e) => { setSelectedCategory(e.target.value); setSelectedType(''); };
-  const currentPlantInfo = plant && plant.category && plant.type
-    ? CROPS_DATABASE[plant.category]?.types[plant.type]
-    : selectedType && selectedCategory ? CROPS_DATABASE[selectedCategory]?.types[selectedType] : null;
+  const currentPlantInfo = plant?.category && plant?.type ? CROPS_DATABASE[plant.category]?.types[plant.type] : selectedCategory && selectedType ? CROPS_DATABASE[selectedCategory]?.types[selectedType] : null;
 
   const handleEditSubmit = (e) => {
     e.preventDefault();
     if (!selectedCategory || !selectedType) { notify.error({ title: 'Faltan datos', description: 'Selecciona categoría y tipo' }); return; }
     const plantInfo = CROPS_DATABASE[selectedCategory].types[selectedType];
-    const isCreating = !plant;
-    onSave?.({ id: isCreating ? activePlantId : plant?.id, category: selectedCategory, type: selectedType, name: plantInfo.name, emoji: plantInfo.emoji, color: plantInfo.color, plantedDate: formData.plantedDate, wateringDays: formData.wateringDays }, { mode: isCreating ? 'create' : 'edit' });
+    onSave?.({ id: plant ? plant.id : activePlantId, category: selectedCategory, type: selectedType, name: plantInfo.name, emoji: plantInfo.emoji, color: plantInfo.color, plantedDate: formData.plantedDate, wateringDays: formData.wateringDays }, { mode: plant ? 'edit' : 'create' });
   };
 
   const handleHarvestSubmit = async (e) => {
@@ -1401,8 +1090,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
     if (!harvestData.gramsPerUnit || Number(harvestData.gramsPerUnit) <= 0) { notify.error({ title: 'Peso requerido', description: 'Introduce los gramos por unidad' }); return; }
     const units = parseInt(harvestData.units, 10);
     const gramsPerUnit = parseFloat(harvestData.gramsPerUnit);
-    const totalGrams = units * gramsPerUnit;
-    await onHarvest({ units, gramsPerUnit, totalGrams, plantId: plant?.id, plantName: plant?.name, plantEmoji: plant?.emoji });
+    await onHarvest({ units, gramsPerUnit, totalGrams: units * gramsPerUnit, plantId: plant?.id, plantName: plant?.name, plantEmoji: plant?.emoji });
     const history = await getPlotHarvestsUseCase(uid, gardenId, position.row, position.col);
     setHarvestHistory(history);
     setHarvestData({ units: '', gramsPerUnit: '' });
@@ -1410,30 +1098,23 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
   };
 
   const confirmDelete = async (deleteHistory = false) => {
-    try {
-      setShowDeleteConfirm(false);
-      await onRemove?.({ deleteHistory });
-    } catch (e) {
-      console.error(e);
-      notify.error({ title: 'Error', description: 'No se pudo eliminar' });
-    }
+    try { setShowDeleteConfirm(false); await onRemove?.({ deleteHistory }); }
+    catch (e) { console.error(e); notify.error({ title: 'Error', description: 'No se pudo eliminar' }); }
   };
+
+  const fmtGrams = (g) => g < 1000 ? `${Math.round(g)}g` : `${(g / 1000).toFixed(1)}kg`;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true">
       <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90dvh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        {/* HEADER */}
         <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6 sticky top-0 z-20">
           <div className="relative flex items-start justify-between gap-4">
             <div className="w-10 h-10 shrink-0" />
             <div className="flex-1 min-w-0 text-center">
               <h3 className="text-xl font-bold text-[#5B7B7A]">{plant ? 'Gestionar planta' : 'Añadir Planta'}</h3>
-              <p className="text-sm text-[#A17C6B] truncate">
-                Parcela [{position?.row}, {position?.col}]
-                {plant && currentPlantInfo && ` - ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}
-              </p>
+              <p className="text-sm text-[#A17C6B] truncate">Parcela [{position?.row}, {position?.col}]{plant && currentPlantInfo && ` - ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}</p>
             </div>
-            <button onClick={onClose} disabled={saving} className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : ''}`} aria-label="Cerrar">
+            <button onClick={onClose} disabled={saving} className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : ''}`}>
               <IoClose className="w-5 h-5 text-[#5B7B7A]" />
             </button>
           </div>
@@ -1451,7 +1132,6 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
           )}
         </div>
 
-        {/* BODY */}
         <div className="flex-1 overflow-y-auto">
           {view === 'harvest' && plant && (
             <form id="harvest-form" onSubmit={handleHarvestSubmit} className="p-6 space-y-6">
@@ -1459,65 +1139,54 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                 <div className="text-center mb-3 sm:mb-4">
                   <p className="text-xs sm:text-sm text-[#A17C6B]">Plantado el {new Date(plant.plantedDate).toLocaleDateString('es-ES')}</p>
                 </div>
-                {loadingHistory ? (
-                  <p className="text-center text-xs sm:text-sm text-[#A17C6B]">Cargando historial...</p>
-                ) : harvestHistory.length > 0 ? (
-                  <div className="border-t-2 border-[#CEB5A7]/30 pt-4 mt-4">
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                      <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#5B7B7A]/20 text-center">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#5B7B7A]/10"><IoBasketOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" /></span>
-                          <p className="text-[11px] sm:text-xs text-[#A17C6B]">Total recolectado</p>
-                        </div>
-                        <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">{historyTotals.units}</p>
-                        <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">unidades</p>
-                      </div>
-                      {historyTotals.grams > 0 && (
+                {loadingHistory ? <p className="text-center text-xs sm:text-sm text-[#A17C6B]">Cargando historial...</p>
+                  : harvestHistory.length > 0 ? (
+                    <div className="border-t-2 border-[#CEB5A7]/30 pt-4 mt-4">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#5B7B7A]/20 text-center">
                           <div className="flex items-center justify-center gap-2 mb-2">
-                            <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#5B7B7A]/10"><IoScaleOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" /></span>
-                            <p className="text-[11px] sm:text-xs text-[#A17C6B]">Peso total</p>
+                            <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#5B7B7A]/10"><IoBasketOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" /></span>
+                            <p className="text-[11px] sm:text-xs text-[#A17C6B]">Total recolectado</p>
                           </div>
-                          {historyTotals.grams < 1000 ? (
-                            <><p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">{Math.round(historyTotals.grams)}</p><p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">gramos</p></>
-                          ) : (
-                            <><p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">{(historyTotals.grams / 1000).toFixed(1)}</p><p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">kilogramos</p></>
-                          )}
+                          <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">{historyTotals.units}</p>
+                          <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">unidades</p>
+                        </div>
+                        {historyTotals.grams > 0 && (
+                          <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#5B7B7A]/20 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#5B7B7A]/10"><IoScaleOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" /></span>
+                              <p className="text-[11px] sm:text-xs text-[#A17C6B]">Peso total</p>
+                            </div>
+                            {historyTotals.grams < 1000
+                              ? <><p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">{Math.round(historyTotals.grams)}</p><p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">gramos</p></>
+                              : <><p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] leading-none">{(historyTotals.grams / 1000).toFixed(1)}</p><p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">kilogramos</p></>}
+                          </div>
+                        )}
+                      </div>
+                      <button type="button" onClick={() => setShowHistoryDetails(!showHistoryDetails)} className="w-full mt-3 sm:mt-4 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#5B7B7A]/10 hover:bg-[#5B7B7A]/20 rounded-xl transition-all font-medium text-[#5B7B7A] text-sm sm:text-base">
+                        {showHistoryDetails ? <><IoChevronUpOutline className="w-4 h-4 sm:w-5 sm:h-5" />Ocultar detalles</> : <><IoChevronDownOutline className="w-4 h-4 sm:w-5 sm:h-5" />Ver más ({harvestHistory.length})</>}
+                      </button>
+                      {showHistoryDetails && (
+                        <div className="mt-3 sm:mt-4 space-y-3 max-h-60 overflow-y-auto pr-1">
+                          {harvestHistory.map((harvest) => {
+                            const date = harvest.harvestDate?.toDate?.() || new Date();
+                            return (
+                              <div key={harvest.id} className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#CEB5A7]/30">
+                                <div className="flex justify-between items-start gap-4">
+                                  <div>
+                                    <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">{harvest.units} unidades</p>
+                                    <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">{date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                  </div>
+                                  {harvest.totalGrams && <div className="text-right"><p className="font-bold text-[#5B7B7A] text-sm sm:text-base">{Math.round(harvest.totalGrams)}g</p><p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">{harvest.gramsPerUnit}g/ud</p></div>}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
-                    <button type="button" onClick={() => setShowHistoryDetails(!showHistoryDetails)} className="w-full mt-3 sm:mt-4 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#5B7B7A]/10 hover:bg-[#5B7B7A]/20 rounded-xl transition-all font-medium text-[#5B7B7A] text-sm sm:text-base">
-                      {showHistoryDetails ? <><IoChevronUpOutline className="w-4 h-4 sm:w-5 sm:h-5" />Ocultar detalles</> : <><IoChevronDownOutline className="w-4 h-4 sm:w-5 sm:h-5" />Ver más ({harvestHistory.length})</>}
-                    </button>
-                    {showHistoryDetails && (
-                      <div className="mt-3 sm:mt-4 space-y-3 max-h-60 overflow-y-auto pr-1">
-                        {harvestHistory.map((harvest) => {
-                          const date = harvest.harvestDate?.toDate?.() || new Date();
-                          return (
-                            <div key={harvest.id} className="bg-white rounded-xl p-3 sm:p-4 border-2 border-[#CEB5A7]/30">
-                              <div className="flex justify-between items-start gap-4">
-                                <div>
-                                  <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">{harvest.units} unidades</p>
-                                  <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">{date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                                </div>
-                                {harvest.totalGrams && (
-                                  <div className="text-right">
-                                    <p className="font-bold text-[#5B7B7A] text-sm sm:text-base">{Math.round(harvest.totalGrams)}g</p>
-                                    <p className="text-[11px] sm:text-xs text-[#A17C6B] mt-1">{harvest.gramsPerUnit}g/ud</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-center text-xs sm:text-sm text-[#A17C6B]">Aún no hay cosechas registradas</p>
-                )}
+                  ) : <p className="text-center text-xs sm:text-sm text-[#A17C6B]">Aún no hay cosechas registradas</p>}
               </div>
-
               <div className="border-t-2 border-[#CEB5A7]/30 pt-6">
                 <h4 className="text-lg font-bold text-[#5B7B7A] mb-4">Nueva Cosecha</h4>
                 <div className="mb-4">
@@ -1537,13 +1206,13 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
             <form id="edit-form" onSubmit={handleEditSubmit} className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
-                <select value={selectedCategory} onChange={handleCategoryChange} className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base cursor-pointer" required disabled={saving}>
+                <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); setSelectedType(''); }} className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base cursor-pointer" required disabled={saving}>
                   <option value="">Selecciona una categoría</option>
-                  {Object.entries(CROPS_DATABASE).map(([key, data]) => (<option key={key} value={key}>{data.emoji} {data.label}</option>))}
+                  {Object.entries(CROPS_DATABASE).map(([key, data]) => <option key={key} value={key}>{data.emoji} {data.label}</option>)}
                 </select>
               </div>
               {selectedCategory && (
-                <div className="animate-fadeIn">
+                <div>
                   <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Tipo de {CROPS_DATABASE[selectedCategory].label}</label>
                   <div className="grid grid-cols-2 gap-3">
                     {Object.entries(CROPS_DATABASE[selectedCategory].types).map(([key, plantType]) => (
@@ -1568,7 +1237,6 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
           )}
         </div>
 
-        {/* FOOTER */}
         <div className="sticky bottom-0 z-20 bg-white border-t-2 border-[#CEB5A7]/30 p-4">
           {view === 'harvest' && plant && (
             <div className="flex gap-3">
@@ -1578,26 +1246,19 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
           )}
           {view === 'edit' && (
             <div className="flex gap-3">
-              {onRemove && (
-                <button type="button" onClick={() => setShowDeleteConfirm(true)} disabled={saving} className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>Eliminar</button>
-              )}
+              {onRemove && <button type="button" onClick={() => setShowDeleteConfirm(true)} disabled={saving} className={`px-6 py-3 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all font-bold ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>Eliminar</button>}
               <button type="submit" form="edit-form" disabled={saving || !selectedCategory || !selectedType} className={`flex-1 px-6 py-3 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-xl transition-all font-bold ${saving || !selectedCategory || !selectedType ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>Guardar</button>
             </div>
           )}
         </div>
 
-        <ConfirmModal
-          isOpen={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          title="Eliminar cultivo"
-          description="Si mantienes el historial, no se borra nada de la base de datos."
-          variant="danger"
+        <ConfirmModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Eliminar cultivo"
+          description="Si mantienes el historial, no se borra nada de la base de datos." variant="danger"
           actions={[
             { label: 'Cancelar', style: 'cancel', onClick: () => setShowDeleteConfirm(false), disabled: saving },
             { label: 'Eliminar cultivo (mantener historial)', style: 'ghost', onClick: () => confirmDelete(false), disabled: saving },
             { label: 'Eliminar cultivo + historial', style: 'danger', onClick: () => confirmDelete(true), disabled: saving },
-          ]}
-        />
+          ]} />
       </div>
     </div>
   );
