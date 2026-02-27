@@ -38,7 +38,7 @@ const App = () => {
             <PiPlantFill className="w-9 h-9 text-white" />
           </div>
           <p className="font-bold text-[#5B7B7A] text-sm tracking-wider">
-            Cargando Garden Pro...
+            Cargando Garden Manager...
           </p>
         </div>
       ) : !user ? (

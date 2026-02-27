@@ -317,7 +317,6 @@ const CalendarioSection = () => {
                     className="flex items-center gap-2 px-3 py-2 bg-white border-2 border-[#CEB5A7]/40 rounded-xl text-sm font-medium text-[#5B7B7A] hover:bg-[#E0F2E9] transition-all disabled:opacity-50 cursor-pointer"
                 >
                     <IoRefreshOutline className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    Actualizar
                 </button>
 
                 {loading && !error && (
