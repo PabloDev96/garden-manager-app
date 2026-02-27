@@ -14,6 +14,7 @@ import {
   IoListOutline,
 } from 'react-icons/io5';
 import { GiPlantSeed } from "react-icons/gi";
+import { BiArea } from "react-icons/bi";
 
 import HoverTooltip from './HoverTooltip';
 import useCellSize from '../utils/calculateCellSize';
@@ -268,7 +269,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                       <input type="checkbox" checked={isChecked} onChange={(e) => toggleCheck(key, e)}
                         className="w-4 h-4 rounded border-2 border-[#CEB5A7] accent-[#5B7B7A] cursor-pointer" />
                     </div>
-                    <span className="text-xs font-mono font-bold text-[#A17C6B]">{r},{c}</span>
+                    <span className="text-xs font-mono font-bold text-[#A17C6B]">({r},{c})</span>
                     <div className="flex items-center gap-1.5 min-w-0 cursor-pointer" onClick={() => onCellClick(r, c)}>
                       {plantInfo ? (
                         <><span className="text-base shrink-0">{plantInfo.emoji}</span><span className="text-xs font-semibold text-[#3D5A59] truncate">{plantInfo.name}</span></>
@@ -326,7 +327,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                           </span>
                         )}
                         <span className="ml-auto text-[10px] font-mono font-bold text-[#A17C6B] shrink-0 bg-[#E0F2E9] px-1.5 py-0.5 rounded-md">
-                          {r},{c}
+                          ({r},{c})
                         </span>
                       </div>
 
@@ -370,7 +371,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                   {/* Historial expandido (compartido mobile+desktop) */}
                   {isExpanded && harvests.length > 0 && (
                     <div className="bg-[#E0F2E9]/30 border-t border-[#CEB5A7]/20 px-3 sm:px-4 py-3">
-                      <p className="text-xs font-bold text-[#5B7B7A] uppercase tracking-wide mb-2">Historial</p>
+                      <p className="text-xs font-bold text-[#5B7B7A] uppercase tracking-wide mb-2">Historial ({r},{c})</p>
                       <div className="space-y-1.5">
                         {harvests.map((h) => {
                           const date = h.harvestDate?.toDate?.() || new Date();
@@ -427,7 +428,7 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                         <span className="text-xs font-semibold text-[#3D5A59] truncate">
                           {h.plantInfo?.name ?? h.plant?.name ?? 'Cultivo'}
                         </span>
-                        <span className="text-[10px] text-[#A17C6B] font-mono shrink-0">{h.r},{h.c}</span>
+                        <span className="text-[10px] text-[#A17C6B] font-mono shrink-0">({h.r},{h.c})</span>
                       </div>
                       <span className="text-[10px] text-[#A17C6B]">{fmtDateTime(date)}</span>
                     </div>
@@ -747,6 +748,10 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const { ref: gridRef, cellSize } = useCellSize({ cols: garden.grid.columns, gapPx, preferred: isMobile ? 36 : 100, min: isMobile ? 14 : 18 });
   const emptyCells = garden.plants.flat().filter((p) => p === null).length;
   const plantedCells = garden.plants.flat().filter((p) => p !== null).length;
+  const totalPlots = garden.grid.rows * garden.grid.columns;
+  const plotWidth = garden.dimensions.width / garden.grid.columns;
+  const plotHeight = garden.dimensions.height / garden.grid.rows;
+  const plotArea = (plotWidth * plotHeight).toFixed(2);
 
   return (
     <div className="fixed inset-0 bg-[#E0F2E9] z-50 overflow-y-auto">
@@ -757,25 +762,25 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         <div className="w-full px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex justify-between items-center gap-3">
             <div className="flex items-center gap-4">
-              <button onClick={onClose} className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all cursor-pointer">
+              <button onClick={onClose} className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all cursor-pointer shrink-0">
                 <IoArrowBackOutline className="w-6 h-6 text-white" />
               </button>
-              <div className="flex items-center gap-4 flex-wrap">
-                <div>
-                  <h1 className="text-2xl font-bold text-[#5B7B7A]">{garden.name}</h1>
-                  <p className="text-sm text-[#A17C6B]">{garden.dimensions.width}m × {garden.dimensions.height}m | {garden.grid.columns}×{garden.grid.rows} parcelas</p>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="min-w-0">
+                  <h1 className="text-base font-bold text-[#5B7B7A] truncate">{garden.name}</h1>
+                  <p className="text-xs text-[#A17C6B] truncate">{garden.dimensions.width}m × {garden.dimensions.height}m | {garden.grid.columns}×{garden.grid.rows} parcelas</p>
                 </div>
-                <div className="flex items-center bg-white border-2 border-[#CEB5A7]/40 rounded-xl p-1 gap-1">
-                  <HoverTooltip label="Vista cuadrícula" mode="auto">
-                    <button onClick={() => setViewMode('grid')} className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}>
-                      <IoGridOutline className="w-5 h-5" />
-                    </button>
-                  </HoverTooltip>
+                <div className="flex items-center bg-white border-2 border-[#CEB5A7]/40 rounded-xl p-1 gap-1 shrink-0">
                   <HoverTooltip label="Vista tabla" mode="auto">
                     <button onClick={() => setViewMode('table')} className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer ${viewMode === 'table' ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}>
                       <IoListOutline className="w-5 h-5" />
                     </button>
                   </HoverTooltip>
+                  <HoverTooltip label="Vista cuadrícula" mode="auto">
+                    <button onClick={() => setViewMode('grid')} className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#A17C6B] hover:bg-[#E0F2E9]'}`}>
+                      <IoGridOutline className="w-5 h-5" />
+                    </button>
+                  </HoverTooltip>                  
                 </div>
               </div>
             </div>
@@ -794,8 +799,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
-              { icon: <IoGridOutline className="w-4 h-4" />, label: 'Parcelas totales', value: garden.grid.rows * garden.grid.columns },
-              { icon: <IoLeafOutline className="w-4 h-4" />, label: 'Plantadas', value: plantedCells },
+              { icon: <IoGridOutline className="w-4 h-4" />, label: 'Plantas', value: `${plantedCells}/${totalPlots}` },
+              { icon: <BiArea className="w-4 h-4" />, label: 'Superficie parcela', value: `${plotArea} m²` },
               { icon: <IoBasketOutline className="w-4 h-4" />, label: 'Unidades cosechadas', value: gardenTotals.totalUnits },
               {
                 icon: <IoScaleOutline className="w-4 h-4" />, label: 'Peso total',
@@ -876,7 +881,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                                     <IoAddOutline className="text-[#5B7B7A]" style={{ width: Math.min(18, cellSize * 0.6), height: Math.min(18, cellSize * 0.6) }} />
                                   </div>
                                 )}
-                                <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">{rowIndex},{colIndex}</span>
+                                <span className="absolute bottom-0.5 right-1 text-[9px] font-bold opacity-30">({rowIndex},{colIndex})</span>
                               </button>
                             );
                           })
@@ -1112,7 +1117,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
             <div className="w-10 h-10 shrink-0" />
             <div className="flex-1 min-w-0 text-center">
               <h3 className="text-xl font-bold text-[#5B7B7A]">{plant ? 'Gestionar planta' : 'Añadir Planta'}</h3>
-              <p className="text-sm text-[#A17C6B] truncate">Parcela [{position?.row}, {position?.col}]{plant && currentPlantInfo && ` - ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}</p>
+              <p className="text-sm text-[#A17C6B] truncate">Parcela ({position?.row},{position?.col}){plant && currentPlantInfo && ` - ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}</p>
             </div>
             <button onClick={onClose} disabled={saving} className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : ''}`}>
               <IoClose className="w-5 h-5 text-[#5B7B7A]" />
