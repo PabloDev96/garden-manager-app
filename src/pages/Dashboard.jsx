@@ -17,7 +17,9 @@ import {
 } from 'react-icons/io5';
 import { PiPlant } from "react-icons/pi";
 import { RiContractLeftLine, RiExpandRightLine } from "react-icons/ri";
+import { IoIosNotificationsOutline } from "react-icons/io";
 
+import AlertModal from '../components/AlertModal';
 import CalendarioSection from '../components/CalendarioSection';
 import HoverTooltip from "../components/HoverTooltip";
 import ConfirmModal from '../components/ConfirmModal';
@@ -25,17 +27,18 @@ import GardenModal from '../components/GardenModal';
 import GardenCard from '../components/Gardencard';
 import GardenView from '../components/Gardenview';
 import getGardenTotalsUseCase from '../services/gardens/getGardenTotalUseCase';
-
 import subscribeGardensUseCase from '../services/gardens/subscribeGardensUseCase';
 import addGardenUseCase from '../services/gardens/addGardenUseCase';
 import updateGardenUseCase from '../services/gardens/updateGardenUseCase';
 import deleteGardenUseCase from '../services/gardens/deleteGardenUseCase';
+import addAlertUseCase from '../services/alerts/addAlertUseCase';
+import subscribeAlertsUseCase from '../services/alerts/subscribeAlertsUseCase';
 
 // ─── Secciones ───────────────────────────────────────────────────────────────
 
-const HuertosSection = ({ gardens, loadingGardens, gardenTotalsMap, onOpenGarden, onAddGarden }) => (
+const HuertosSection = ({ gardens, loadingGardens, gardenTotalsMap, onOpenGarden, onAddGarden, onAddAlert }) => (
   <div className="space-y-6">
-    <div className="flex flex-col items-center justify-center gap-4 text-center">
+    <div className="flex items-center justify-center gap-3">
       <HoverTooltip label="Añadir huerto" mode="auto" className="inline-flex">
         <button
           type="button"
@@ -45,6 +48,14 @@ const HuertosSection = ({ gardens, loadingGardens, gardenTotalsMap, onOpenGarden
         >
           <IoAddOutline className="w-5 h-5 transition-transform duration-300 ease-out group-hover:rotate-90 group-hover:scale-110" />
           <PiPlant className="w-5 h-5 transition-transform duration-300 ease-out group-hover:scale-110" />
+        </button>
+      </HoverTooltip>
+
+      <HoverTooltip label="Añadir recordatorio" mode="auto" className="inline-flex">
+        <button type="button" onClick={onAddAlert}
+          className="group flex items-center gap-2 bg-white border-2 border-[#CEB5A7]/60 text-[#5B7B7A] px-4 py-2.5 rounded-xl hover:shadow-lg hover:border-[#5B7B7A] transition-all font-bold cursor-pointer">
+          <IoAddOutline className="w-5 h-5 transition-transform duration-300 ease-out group-hover:rotate-90 group-hover:scale-110" />
+          <IoIosNotificationsOutline className="w-5 h-5 transition-transform duration-300 ease-out group-hover:scale-110" />
         </button>
       </HoverTooltip>
     </div>
@@ -100,8 +111,6 @@ const DashboardSection = ({ gardens }) => {
 
   return (
     <div className="space-y-8">
-
-      {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
           <div
@@ -120,7 +129,6 @@ const DashboardSection = ({ gardens }) => {
         ))}
       </div>
 
-      {/* Alertas & Consejo */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-8">
           <h3 className="font-bold text-xl text-[#5B7B7A] mb-6 flex items-center gap-2">
@@ -152,7 +160,6 @@ const DashboardSection = ({ gardens }) => {
         </div>
       </div>
 
-      {/* Placeholder tablas */}
       <div className="bg-white border-2 border-dashed border-[#CEB5A7]/60 rounded-3xl p-10 text-center">
         <IoStatsChartOutline className="w-10 h-10 text-[#CEB5A7] mx-auto mb-3" />
         <p className="text-[#A17C6B] font-medium">Aquí aparecerán las tablas de análisis</p>
@@ -162,7 +169,10 @@ const DashboardSection = ({ gardens }) => {
   );
 };
 
-
+const todayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 const ConfiguracionSection = () => (
   <div className="space-y-6">
@@ -178,21 +188,14 @@ const ConfiguracionSection = () => (
   </div>
 );
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
-
-const NAV_ITEMS = [
-  { id: 'huertos', label: 'Huertos', icon: PiPlant },
-  { id: 'dashboard', label: 'Dashboard', icon: IoStatsChartOutline },
-  { id: 'calendario', label: 'Calendario', icon: IoCalendarOutline },
-  { id: 'configuracion', label: 'Configuración', icon: IoSettingsOutline },
-];
-
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 const Dashboard = ({ user }) => {
   const [gardens, setGardens] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showGardenModal, setShowGardenModal] = useState(false);
+  const [showAlertModal, setShowAlertModal] = useState(false);
   const [selectedGarden, setSelectedGarden] = useState(null);
   const [loadingGardens, setLoadingGardens] = useState(true);
   const [gardenTotalsMap, setGardenTotalsMap] = useState({});
@@ -204,6 +207,14 @@ const Dashboard = ({ user }) => {
   });
 
   const uid = user?.uid;
+  const today = todayKey();
+
+  const NAV_ITEMS = [
+    { id: 'huertos', label: 'Huertos', icon: PiPlant },
+    { id: 'dashboard', label: 'Dashboard', icon: IoStatsChartOutline },
+    { id: 'calendario', label: 'Calendario', icon: IoCalendarOutline, badge: alerts.filter(a => a.date === today).length || null },
+    { id: 'configuracion', label: 'Configuración', icon: IoSettingsOutline },
+  ];
 
   // Bienvenida
   useEffect(() => {
@@ -256,6 +267,17 @@ const Dashboard = ({ user }) => {
     return () => unsub();
   }, [uid]);
 
+  // Suscripción realtime de alertas
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = subscribeAlertsUseCase(
+      uid,
+      setAlerts,
+      (err) => console.error('Error cargando alertas:', err)
+    );
+    return () => unsub();
+  }, [uid]);
+
   useEffect(() => {
     localStorage.setItem("menuExpanded", JSON.stringify(menuExpanded));
   }, [menuExpanded]);
@@ -294,6 +316,18 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  const handleSaveAlert = async (alert) => {
+    if (!uid) return;
+    try {
+      await addAlertUseCase(uid, alert);
+      const [y, m, d] = alert.date.split('-');
+      notify.success({ title: "Recordatorio guardado 🔔", description: `Alerta para el ${d}/${m}/${y}`, duration: 2000 });
+    } catch (e) {
+      console.error(e);
+      notify.error({ title: "No se pudo guardar el recordatorio", description: "Inténtalo de nuevo en unos segundos" });
+    }
+  };
+
   // GardenView ocupa toda la pantalla
   if (selectedGarden) {
     return (
@@ -314,7 +348,6 @@ const Dashboard = ({ user }) => {
     <>
       <div className="min-h-screen bg-[#E0F2E9]">
 
-        {/* Overlay cuando el menú está abierto */}
         {menuOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 transition-opacity"
@@ -322,13 +355,11 @@ const Dashboard = ({ user }) => {
           />
         )}
 
-        {/* Slide-out Menu */}
         <div
           className={`fixed top-0 left-0 h-full ${menuExpanded ? "w-60" : "w-24"} bg-white border-r-2 border-[#CEB5A7] z-50 transform transition-all duration-300 ease-in-out ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
           onMouseEnter={() => setMenuOpen(true)}
           onMouseLeave={() => setMenuOpen(false)}
         >
-          {/* Menu Header */}
           <div className="px-2 py-2 border-b-2 border-[#CEB5A7]/30 bg-gradient-to-br from-[#E0F2E9] to-white">
             <div
               className={`flex items-center
@@ -337,7 +368,6 @@ const Dashboard = ({ user }) => {
                   : "justify-center"
                 }`}
             >
-              {/* Avatar */}
               <div
                 className={`overflow-hidden shrink-0 flex items-center justify-center
                   ${menuExpanded
@@ -362,7 +392,6 @@ const Dashboard = ({ user }) => {
                 />
               </div>
 
-              {/* Info solo expanded */}
               {menuExpanded && (
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-[#5B7B7A] truncate">{user.name}</p>
@@ -372,7 +401,6 @@ const Dashboard = ({ user }) => {
             </div>
           </div>
 
-          {/* Menu Items */}
           <nav className="p-4 space-y-6">
             {NAV_ITEMS.map((item) => {
               const isActive = activeSection === item.id;
@@ -390,8 +418,18 @@ const Dashboard = ({ user }) => {
                       : "text-[#5B7B7A] hover:bg-[#E0F2E9] border-2 border-transparent hover:border-[#CEB5A7]"
                     }`}
                 >
-                  <item.icon className="w-6 h-6 shrink-0" />
+                  <span className="relative shrink-0">
+                    <item.icon className="w-6 h-6" />
+                    {item.badge && (
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none border-2 border-white shadow-sm">
+                        {item.badge}
+                      </span>
+                    )}
+                  </span>
                   {menuExpanded && <span className="truncate">{item.label}</span>}
+                  {menuExpanded && item.badge && (
+                    <span className="ml-auto shrink-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">hoy</span>
+                  )}
                 </button>
               );
 
@@ -405,14 +443,10 @@ const Dashboard = ({ user }) => {
             })}
           </nav>
 
-          {/* Expand / Collapse Button */}
           <div
             className={`absolute bottom-4 left-0 right-0 px-3 flex ${menuExpanded ? "justify-end pr-2" : "justify-center"}`}
           >
-            <HoverTooltip
-              label={menuExpanded ? "Contraer menú" : "Expandir menú"}
-              mode="auto"
-            >
+            <HoverTooltip label={menuExpanded ? "Contraer menú" : "Expandir menú"} mode="auto">
               <button
                 type="button"
                 onClick={() => setMenuExpanded((v) => !v)}
@@ -429,44 +463,32 @@ const Dashboard = ({ user }) => {
           </div>
         </div>
 
-        {/* Header */}
         <header className="bg-white/80 backdrop-blur-md border-b border-[#CEB5A7]/30 sticky top-0 z-30">
           <div className="w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
             <div className="flex justify-between items-center">
-
-              {/* Menu Button */}
               <button
                 onClick={() => setMenuOpen(true)}
                 onMouseEnter={() => setMenuOpen(true)}
-                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B]
-                   rounded-xl flex items-center justify-center
-                   hover:shadow-xl transition-all group"
+                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all group"
               >
-                <IoMenuOutline className="w-6 h-6 text-white
-                                  group-hover:scale-110 transition-transform" />
+                <IoMenuOutline className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
               </button>
 
-              {/* Logout Button */}
               <div className="relative group">
                 <HoverTooltip label="Cerrar sesión" mode="auto" className="inline-flex">
                   <button
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="w-12 h-12 flex items-center justify-center
-                       rounded-xl text-red-600 hover:bg-red-50
-                       transition-all duration-200 cursor-pointer"
+                    className="w-12 h-12 flex items-center justify-center rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 cursor-pointer"
                     aria-label="Cerrar sesión"
                   >
-                    <IoLogOutOutline className="w-7 h-7
-                                        transition-transform duration-200 group-hover:scale-110" />
+                    <IoLogOutOutline className="w-7 h-7 transition-transform duration-200 group-hover:scale-110" />
                   </button>
                 </HoverTooltip>
               </div>
-
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           {activeSection === 'huertos' && (
             <HuertosSection
@@ -475,17 +497,12 @@ const Dashboard = ({ user }) => {
               gardenTotalsMap={gardenTotalsMap}
               onOpenGarden={setSelectedGarden}
               onAddGarden={() => setShowGardenModal(true)}
+              onAddAlert={() => setShowAlertModal(true)}
             />
           )}
-          {activeSection === 'dashboard' && (
-            <DashboardSection gardens={gardens} />
-          )}
-          {activeSection === 'calendario' && (
-            <CalendarioSection />
-          )}
-          {activeSection === 'configuracion' && (
-            <ConfiguracionSection />
-          )}
+          {activeSection === 'dashboard' && <DashboardSection gardens={gardens} />}
+          {activeSection === 'calendario' && <CalendarioSection alerts={alerts} />}
+          {activeSection === 'configuracion' && <ConfiguracionSection />}
         </main>
 
         <ConfirmModal
@@ -505,6 +522,13 @@ const Dashboard = ({ user }) => {
         isOpen={showGardenModal}
         onClose={() => setShowGardenModal(false)}
         onSave={handleSaveGarden}
+      />
+
+      <AlertModal
+        isOpen={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        onSave={handleSaveAlert}
+        gardens={gardens}
       />
     </>
   );

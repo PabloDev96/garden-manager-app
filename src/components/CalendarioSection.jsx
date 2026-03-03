@@ -180,7 +180,7 @@ const WeatherTile = ({ weather }) => {
 
 // ─── DayDetail ────────────────────────────────────────────────────────────────
 
-const DayDetail = ({ date, weather }) => {
+const DayDetail = ({ date, weather, alerts }) => {
     if (!date) return (
         <div className="flex flex-col items-center justify-center h-full text-center p-6 gap-3">
             <div className="w-14 h-14 rounded-2xl bg-[#E0F2E9] flex items-center justify-center">
@@ -191,6 +191,7 @@ const DayDetail = ({ date, weather }) => {
         </div>
     );
 
+    const dayAlerts = alerts.filter((a) => a.date === toKey(date));
     const cfg = weather ? (CONDITION_CONFIG[weather.condition] ?? CONDITION_CONFIG.cloudy) : null;
     const Icon = cfg?.icon ?? IoSunnyOutline;
     const dayLabel = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -238,11 +239,20 @@ const DayDetail = ({ date, weather }) => {
                         </p>
                     </div>
 
-                    {/* Tareas — placeholder */}
-                    <div className="bg-[#E0F2E9] rounded-2xl p-4 border border-[#5B7B7A]/20 mt-auto">
-                        <p className="text-xs font-semibold text-[#5B7B7A] mb-1">🌱 Tareas del día</p>
-                        <p className="text-xs text-[#A17C6B]">Próximamente podrás ver y gestionar tus tareas de huerto aquí.</p>
-                    </div>
+                    {/* Recordatorios del día */}
+                    {dayAlerts.length > 0 && (
+                        <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 space-y-2">
+                            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+                                🔔 Recordatorios
+                            </p>
+                            {dayAlerts.map((a) => (
+                                <div key={a.id} className="bg-white rounded-xl px-3 py-2.5 border border-amber-100">
+                                    <p className="text-xs text-amber-700 font-medium">{a.content}</p>
+                                    <p className="text-[10px] text-amber-400 mt-0.5">Huerto: {a.gardenId}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </>
             ) : (
                 <div className="bg-white rounded-2xl p-4 border border-[#CEB5A7]/30 text-center">
@@ -258,7 +268,7 @@ const DayDetail = ({ date, weather }) => {
 
 const OVIEDO = { label: 'Oviedo', lat: 43.3614, lon: -5.8593 };
 
-const CalendarioSection = () => {
+const CalendarioSection = ({ alerts = [] }) => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [ubicacion, setUbicacion] = useState(OVIEDO);
 
@@ -369,12 +379,13 @@ const CalendarioSection = () => {
             }
             .garden-calendar .react-calendar__month-view__weekdays__weekday abbr { text-decoration: none; }
             .garden-calendar .react-calendar__tile {
-              background: none; border: 2px solid transparent; cursor: pointer;
-              border-radius: 0.75rem; padding: 0.4rem 0.25rem 0.5rem;
-              display: flex; flex-direction: column; align-items: center;
-              font-size: 0.85rem; font-weight: 500; color: #3D5A59;
-              transition: background 0.15s; min-height: 4rem;
-            }
+  position: relative; overflow: visible;
+  background: none; border: 2px solid transparent; cursor: pointer;
+  border-radius: 0.75rem; padding: 0.4rem 0.25rem 0.5rem;
+  display: flex; flex-direction: column; align-items: center;
+  font-size: 0.85rem; font-weight: 500; color: #3D5A59;
+  transition: background 0.15s; min-height: 4rem;
+}
             .garden-calendar .react-calendar__tile:hover { background: #E0F2E9; border-color: #CEB5A7; }
             .garden-calendar .react-calendar__tile--now { background: #E0F2E9; font-weight: 700; }
             .garden-calendar .react-calendar__tile--active {
@@ -395,8 +406,19 @@ const CalendarioSection = () => {
                         locale="es-ES"
                         tileContent={({ date, view }) => {
                             if (view !== 'month') return null;
-                            const weather = weatherData[toKey(date)];
-                            return <WeatherTile weather={weather} />;
+                            const key = toKey(date);
+                            const weather = weatherData[key];
+                            const dayAlerts = alerts.filter((a) => a.date === key);
+                            return (
+                                <>
+                                    <WeatherTile weather={weather} />
+                                    {dayAlerts.length > 0 && (
+                                        <span className="absolute top-1 right-1 min-w-[14px] h-3.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none shadow-sm">
+                                            {dayAlerts.length}
+                                        </span>
+                                    )}
+                                </>
+                            );
                         }}
                     />
                 </div>
@@ -409,7 +431,7 @@ const CalendarioSection = () => {
                             <p className="text-[#A17C6B] text-sm">Cargando pronóstico…</p>
                         </div>
                     ) : (
-                        <DayDetail date={selectedDate} weather={selectedWeather} />
+                        <DayDetail date={selectedDate} weather={selectedWeather} alerts={alerts} />
                     )}
                 </div>
             </div>
