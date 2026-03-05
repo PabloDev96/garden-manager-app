@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getMessaging } from 'firebase/messaging';
 
 // Datos de configuración obtenidos de la consola de Firebase
 const firebaseConfig = {
@@ -22,5 +23,8 @@ export const auth = getAuth(app);
 
 // Proveedor de Google para iniciar sesión
 export const googleProvider = new GoogleAuthProvider();
+
+// Notificaciones móvil
+export const messaging = getMessaging(app);
 
 export default app;

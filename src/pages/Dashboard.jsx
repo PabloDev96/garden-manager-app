@@ -33,6 +33,7 @@ import updateGardenUseCase from '../services/gardens/updateGardenUseCase';
 import deleteGardenUseCase from '../services/gardens/deleteGardenUseCase';
 import addAlertUseCase from '../services/alerts/addAlertUseCase';
 import subscribeAlertsUseCase from '../services/alerts/subscribeAlertsUseCase';
+import requestPermissionUseCase from '../services/notifications/requestPermissionUseCase';
 
 // ─── Secciones ───────────────────────────────────────────────────────────────
 
@@ -276,6 +277,12 @@ const Dashboard = ({ user }) => {
       (err) => console.error('Error cargando alertas:', err)
     );
     return () => unsub();
+  }, [uid]);
+
+  // Notificaciones
+  useEffect(() => {
+    if (!uid) return;
+    requestPermissionUseCase(uid);
   }, [uid]);
 
   useEffect(() => {
