@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 exports.enviarRecordatoriosHoy = onSchedule(
-    { schedule: 'every day 15:28', timeZone: 'Europe/Madrid' },
+    { schedule: 'every day 15:15', timeZone: 'Europe/Madrid' },
     async () => {
         const db = admin.firestore();
         const hoy = new Date().toISOString().split('T')[0];

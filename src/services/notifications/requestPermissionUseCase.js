@@ -7,17 +7,23 @@ const VAPID_KEY = 'BKH-G6I5VzzSHDv-5IuvtFD_11f8d2A-WTX9ykY5P6sc8Z41-wPJeqW-MnvPL
 
 const requestPermissionUseCase = async (uid) => {
     try {
-        if (!('Notification' in window)) return;
+        console.log('1. Iniciando requestPermission...');
+        if (!('Notification' in window)) { console.log('No soporta notificaciones'); return; }
+
         const permission = await Notification.requestPermission();
+        console.log('2. Permiso:', permission);
         if (permission !== 'granted') return;
 
+        console.log('3. Obteniendo token...');
         const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-        if (!token) return;
+        console.log('4. Token obtenido:', token);
+        if (!token) { console.log('No se obtuvo token'); return; }
 
         await setDoc(doc(db, 'users', uid, 'fcmTokens', token), {
             token,
             createdAt: new Date().toISOString(),
         });
+        console.log('5. Token guardado en Firestore');
     } catch (e) {
         console.error('Error registrando notificaciones:', e);
     }
