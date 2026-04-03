@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IoCloseOutline, IoNotificationsOutline, IoCalendarOutline } from 'react-icons/io5';
 import DateInput from './DateInput';
+import SelectInput from './SelectInput';
 
 const AlertModal = ({ isOpen, onClose, onSave, gardens = [] }) => {
     const [gardenId, setGardenId] = useState('');
@@ -68,13 +69,13 @@ const AlertModal = ({ isOpen, onClose, onSave, gardens = [] }) => {
                                 No tienes huertos creados
                             </div>
                         ) : (
-                            <select
+                            <SelectInput
                                 value={gardenId}
-                                onChange={(e) => { setGardenId(e.target.value); setErrors((p) => ({ ...p, gardenId: null })); }}
-                                className={`w-full px-4 py-3 rounded-xl border-2 text-sm text-[#3D5A59] bg-white outline-none transition-colors cursor-pointer ${errors.gardenId ? 'border-red-400 bg-red-50' : 'border-[#CEB5A7]/40 focus:border-[#5B7B7A]'}`}
-                            >
-                                {gardens.map((g) => <option key={g.id} value={g.id}>{g.name ?? g.id}</option>)}
-                            </select>
+                                onChange={(val) => { setGardenId(val); setErrors((p) => ({ ...p, gardenId: null })); }}
+                                options={gardens.map((g) => ({ value: g.id, label: g.name ?? g.id }))}
+                                placeholder="Selecciona un huerto"
+                                error={errors.gardenId}
+                            />
                         )}
                         {errors.gardenId && <p className="mt-1.5 text-xs text-red-500">{errors.gardenId}</p>}
                     </div>

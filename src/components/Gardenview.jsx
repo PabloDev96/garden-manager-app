@@ -18,6 +18,7 @@ import { BiArea } from "react-icons/bi";
 
 import HoverTooltip from './HoverTooltip';
 import DateInput from './DateInput';
+import SelectInput from './SelectInput';
 import useCellSize from '../utils/calculateCellSize';
 import useGridSelection from "../utils/useGridSelection";
 
@@ -1005,10 +1006,13 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div>
             <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
-            <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); setSelectedType(''); }} className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-sm sm:text-base cursor-pointer" required disabled={processing}>
-              <option value="">Selecciona una categoría</option>
-              {Object.entries(CROPS_DATABASE).map(([key, data]) => <option key={key} value={key}>{data.emoji} {data.label}</option>)}
-            </select>
+            <SelectInput
+              value={selectedCategory}
+              onChange={(val) => { setSelectedCategory(val); setSelectedType(''); }}
+              options={Object.entries(CROPS_DATABASE).map(([key, data]) => ({ value: key, label: `${data.emoji} ${data.label}` }))}
+              placeholder="Selecciona una categoría"
+              disabled={processing}
+            />
           </div>
           {selectedCategory && (
             <div>
@@ -1212,10 +1216,13 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
             <form id="edit-form" onSubmit={handleEditSubmit} className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Categoría</label>
-                <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); setSelectedType(''); }} className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all text-base cursor-pointer" required disabled={saving}>
-                  <option value="">Selecciona una categoría</option>
-                  {Object.entries(CROPS_DATABASE).map(([key, data]) => <option key={key} value={key}>{data.emoji} {data.label}</option>)}
-                </select>
+                <SelectInput
+                  value={selectedCategory}
+                  onChange={(val) => { setSelectedCategory(val); setSelectedType(''); }}
+                  options={Object.entries(CROPS_DATABASE).map(([key, data]) => ({ value: key, label: `${data.emoji} ${data.label}` }))}
+                  placeholder="Selecciona una categoría"
+                  disabled={saving}
+                />
               </div>
               {selectedCategory && (
                 <div>
