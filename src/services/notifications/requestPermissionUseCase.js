@@ -1,6 +1,6 @@
-import { getToken } from 'firebase/messaging';
+import { getToken, onMessage } from 'firebase/messaging';
 import { messaging } from '../../config/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
 const VAPID_KEY = 'BKH-G6I5VzzSHDv-5IuvtFD_11f8d2A-WTX9ykY5P6sc8Z41-wPJeqW-MnvPL-JhJMfLiB-JIvuHxBt7JDhz804';
@@ -19,11 +19,25 @@ const requestPermissionUseCase = async (uid) => {
         console.log('4. Token obtenido:', token);
         if (!token) { console.log('No se obtuvo token'); return; }
 
+        await setDoc(doc(db, 'users', uid), { uid }, { merge: true });
+
+        const tokensSnap = await getDocs(collection(db, 'users', uid, 'fcmTokens'));
+        await Promise.all(tokensSnap.docs.map((d) => deleteDoc(d.ref)));
+
         await setDoc(doc(db, 'users', uid, 'fcmTokens', token), {
             token,
             createdAt: new Date().toISOString(),
         });
         console.log('5. Token guardado en Firestore');
+
+        onMessage(messaging, (payload) => {
+            navigator.serviceWorker.ready.then((registration) => {
+                registration.showNotification(payload.notification.title, {
+                    body: payload.notification.body,
+                    icon: '/favicon.ico',
+                });
+            });
+        });
     } catch (e) {
         console.error('Error registrando notificaciones:', e);
     }
