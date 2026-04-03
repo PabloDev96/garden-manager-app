@@ -3,7 +3,7 @@ import { messaging } from '../../config/firebase';
 import { doc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
-const VAPID_KEY = 'BKH-G6I5VzzSHDv-5IuvtFD_11f8d2A-WTX9ykY5P6sc8Z41-wPJeqW-MnvPL-JhJMfLiB-JIvuHxBt7JDhz804';
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
 const requestPermissionUseCase = async (uid) => {
     try {

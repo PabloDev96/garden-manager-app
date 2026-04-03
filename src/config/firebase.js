@@ -5,13 +5,13 @@ import { getMessaging } from 'firebase/messaging';
 
 // Datos de configuración obtenidos de la consola de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDaHWPn7sWJUBffzEOfghm9kfbk7fkswYw",
-  authDomain: "garden-manager-app.firebaseapp.com",
-  projectId: "garden-manager-app",
-  storageBucket: "garden-manager-app.firebasestorage.app",
-  messagingSenderId: "633457955079",
-  appId: "1:633457955079:web:4ad08f2195c847a6fe75a2",
-  measurementId: "G-VVJMXF3YHY"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Inicialización de la aplicación

@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (contain sensitive keys)
+.env
+.env.local
+.env.*.local
+
+# Service Worker generado (se genera desde src/firebase-messaging-sw.template.js)
+public/firebase-messaging-sw.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
