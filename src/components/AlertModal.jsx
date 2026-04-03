@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IoCloseOutline, IoNotificationsOutline, IoCalendarOutline } from 'react-icons/io5';
+import DateInput from './DateInput';
 
 const AlertModal = ({ isOpen, onClose, onSave, gardens = [] }) => {
     const [gardenId, setGardenId] = useState('');
@@ -94,12 +95,11 @@ const AlertModal = ({ isOpen, onClose, onSave, gardens = [] }) => {
                     {/* Fecha */}
                     <div>
                         <label className="block text-sm font-semibold text-[#5B7B7A] mb-2">📅 Fecha</label>
-                        <input
-                            type="date"
-                            min={today}
+                        <DateInput
                             value={date}
-                            onChange={(e) => { setDate(e.target.value); setErrors((p) => ({ ...p, date: null })); }}
-                            className={`w-full px-4 py-3 rounded-xl border-2 text-sm text-[#3D5A59] bg-white outline-none transition-colors cursor-pointer ${errors.date ? 'border-red-400 bg-red-50' : 'border-[#CEB5A7]/40 focus:border-[#5B7B7A]'}`}
+                            onChange={(val) => { setDate(val); setErrors((p) => ({ ...p, date: null })); }}
+                            min={today}
+                            error={errors.date}
                         />
                         {errors.date && <p className="mt-1.5 text-xs text-red-500">{errors.date}</p>}
                     </div>

@@ -17,6 +17,7 @@ import { GiPlantSeed } from "react-icons/gi";
 import { BiArea } from "react-icons/bi";
 
 import HoverTooltip from './HoverTooltip';
+import DateInput from './DateInput';
 import useCellSize from '../utils/calculateCellSize';
 import useGridSelection from "../utils/useGridSelection";
 
@@ -1027,7 +1028,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
           )}
           <div>
             <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2">Fecha de plantación</label>
-            <input type="date" value={formData.plantedDate} onChange={(e) => setFormData({ ...formData, plantedDate: e.target.value })} className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all cursor-pointer text-sm sm:text-base" disabled={processing} />
+            <DateInput value={formData.plantedDate} onChange={(val) => setFormData({ ...formData, plantedDate: val })} disabled={processing} />
           </div>
           <div>
             <label className="block text-xs sm:text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2"><IoWaterOutline className="w-4 h-4 sm:w-5 sm:h-5" />Riego cada (días)</label>
@@ -1231,7 +1232,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
               )}
               <div>
                 <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Fecha de plantación</label>
-                <input type="date" value={formData.plantedDate} onChange={(e) => setFormData({ ...formData, plantedDate: e.target.value })} className="w-full px-4 py-3 border-2 border-[#CEB5A7] rounded-xl focus:outline-none focus:border-[#5B7B7A] transition-all" disabled={saving} />
+                <DateInput value={formData.plantedDate} onChange={(val) => setFormData({ ...formData, plantedDate: val })} disabled={saving} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-[#5B7B7A] mb-2 flex items-center gap-2"><IoWaterOutline className="w-5 h-5" />Riego cada (días)</label>
