@@ -131,36 +131,6 @@ const DashboardSection = ({ uid, gardens }) => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-8">
-          <h3 className="font-bold text-xl text-[#5B7B7A] mb-6 flex items-center gap-2">
-            <IoWarningOutline className="w-6 h-6 text-[#A17C6B]" />
-            Alertas y Actividad
-          </h3>
-          <div className="text-center py-12">
-            <p className="text-[#A17C6B]">No hay alertas por el momento</p>
-            <p className="text-sm text-[#CEB5A7] mt-2">Todo está bajo control 🌱</p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-3xl p-8 text-white relative overflow-hidden">
-          <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-          <div className="absolute -left-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-          <div className="relative">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm">
-              <IoWaterOutline className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-lg mb-3">💡 Consejo del Día</h3>
-            <p className="text-white/90 text-sm leading-relaxed mb-4">
-              El mejor momento para regar es temprano en la mañana. Las plantas absorben mejor el agua y reduces la evaporación.
-            </p>
-            <div className="inline-flex items-center gap-2 text-xs font-medium bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
-              <IoSunnyOutline className="w-4 h-4" />
-              Jardinería sostenible
-            </div>
-          </div>
-        </div>
-      </div>
 
       {gardens.length > 0 && <HarvestChart uid={uid} gardens={gardens} />}
     </div>
