@@ -5,7 +5,7 @@ const Button = ({ children, loading, icon: Icon, ...props }) => {
     <button 
       {...props} 
       disabled={loading || props.disabled}
-      className="w-full bg-white border-2 border-[#CEB5A7] text-[#5B7B7A] hover:bg-[#E0F2E9] hover:border-[#5B7B7A] p-5 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
+      className="w-full bg-white border-2 border-[#CEB5A7] text-[#5B7B7A] hover:bg-[#E0F2E9] hover:border-[#5B7B7A] p-5 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
     >
       {loading ? (
         <div className="flex items-center gap-3">

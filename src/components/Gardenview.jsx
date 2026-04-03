@@ -835,7 +835,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   <div className="w-full flex flex-col items-center gap-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-sm font-bold text-[#5B7B7A]">Selección: {selectedCells.size}</span>
-                      <button type="button" onClick={clearSelection} className="px-3 py-2 rounded-xl border-2 border-[#CEB5A7] text-[#5B7B7A] hover:bg-[#E0F2E9] font-bold text-sm">Limpiar</button>
+                      <button type="button" onClick={clearSelection} className="px-3 py-2 rounded-xl border-2 border-[#CEB5A7] text-[#5B7B7A] hover:bg-[#E0F2E9] font-bold text-sm cursor-pointer">Limpiar</button>
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <button onClick={() => setShowPlantSelectedModal(true)} disabled={processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl hover:shadow-lg transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
@@ -1124,7 +1124,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
               <h3 className="text-xl font-bold text-[#5B7B7A]">{plant ? 'Gestionar planta' : 'Añadir Planta'}</h3>
               <p className="text-sm text-[#A17C6B] truncate">Parcela ({position?.row},{position?.col}){plant && currentPlantInfo && ` - ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}</p>
             </div>
-            <button onClick={onClose} disabled={saving} className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : ''}`}>
+            <button onClick={onClose} disabled={saving} className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
               <IoClose className="w-5 h-5 text-[#5B7B7A]" />
             </button>
           </div>

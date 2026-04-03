@@ -131,7 +131,7 @@ const CitySearch = ({ ubicacion, onSelect }) => {
                             className="flex-1 text-sm text-[#5B7B7A] placeholder-[#CEB5A7] bg-transparent outline-none"
                         />
                         {query && (
-                            <button onClick={handleClear} className="shrink-0 text-[#CEB5A7] hover:text-[#A17C6B] transition-colors">
+                            <button onClick={handleClear} className="shrink-0 text-[#CEB5A7] hover:text-[#A17C6B] transition-colors cursor-pointer">
                                 <IoCloseOutline className="w-4 h-4" />
                             </button>
                         )}

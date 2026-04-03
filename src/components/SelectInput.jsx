@@ -75,7 +75,7 @@ const SelectInput = ({ value, onChange, options = [], placeholder, disabled, err
                                 <button
                                     type="button"
                                     onMouseDown={() => handleSelect(opt.value)}
-                                    className={`w-full flex items-center justify-between px-4 py-2.5 text-sm text-left transition-colors
+                                    className={`w-full flex items-center justify-between px-4 py-2.5 text-sm text-left transition-colors cursor-pointer
                                         ${opt.value === value
                                             ? 'bg-[#E0F2E9] text-[#3D5A59] font-semibold'
                                             : 'text-[#3D5A59] hover:bg-[#E0F2E9]/60'

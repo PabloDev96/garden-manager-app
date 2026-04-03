@@ -70,7 +70,7 @@ const GardenModal = ({ isOpen, onClose, onSave }) => {
 
             <button
               onClick={onClose}
-              className="w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all group"
+              className="w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all group cursor-pointer"
               aria-label="Cerrar"
             >
               <IoClose className="w-5 h-5 text-[#5B7B7A] group-hover:text-red-600 cursor-pointer" />

@@ -76,7 +76,7 @@ const HuertosSection = ({ gardens, loadingGardens, gardenTotalsMap, onOpenGarden
         </p>
         <button
           onClick={onAddGarden}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-8 py-4 rounded-xl hover:shadow-xl transition-all font-bold group"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white px-8 py-4 rounded-xl hover:shadow-xl transition-all font-bold group cursor-pointer"
         >
           <IoAddOutline className="w-5 h-5 group-hover:rotate-90 transition-transform" />
           Crear Mi Primer Huerto
@@ -476,7 +476,7 @@ const Dashboard = ({ user }) => {
               <button
                 onClick={() => setMenuOpen(true)}
                 onMouseEnter={() => setMenuOpen(true)}
-                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all group"
+                className="w-12 h-12 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] rounded-xl flex items-center justify-center hover:shadow-xl transition-all group cursor-pointer"
               >
                 <IoMenuOutline className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
               </button>
