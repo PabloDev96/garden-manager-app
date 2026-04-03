@@ -20,6 +20,7 @@ import { RiContractLeftLine, RiExpandRightLine } from "react-icons/ri";
 import { IoIosNotificationsOutline } from "react-icons/io";
 
 import AlertModal from '../components/AlertModal';
+import HarvestChart from '../components/HarvestChart';
 import CalendarioSection from '../components/CalendarioSection';
 import HoverTooltip from "../components/HoverTooltip";
 import ConfirmModal from '../components/ConfirmModal';
@@ -102,7 +103,7 @@ const HuertosSection = ({ gardens, loadingGardens, gardenTotalsMap, onOpenGarden
   </div>
 );
 
-const DashboardSection = ({ gardens }) => {
+const DashboardSection = ({ uid, gardens }) => {
   const stats = [
     { label: 'Huertos Activos', value: gardens.length, icon: IoLeafOutline, color: 'bg-[#5B7B7A]' },
     { label: 'Alertas Pendientes', value: 0, icon: IoWarningOutline, color: 'bg-[#A17C6B]' },
@@ -161,11 +162,7 @@ const DashboardSection = ({ gardens }) => {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-dashed border-[#CEB5A7]/60 rounded-3xl p-10 text-center">
-        <IoStatsChartOutline className="w-10 h-10 text-[#CEB5A7] mx-auto mb-3" />
-        <p className="text-[#A17C6B] font-medium">Aquí aparecerán las tablas de análisis</p>
-        <p className="text-sm text-[#CEB5A7] mt-1">Próximamente</p>
-      </div>
+      {gardens.length > 0 && <HarvestChart uid={uid} gardens={gardens} />}
     </div>
   );
 };
@@ -507,7 +504,7 @@ const Dashboard = ({ user }) => {
               onAddAlert={() => setShowAlertModal(true)}
             />
           )}
-          {activeSection === 'dashboard' && <DashboardSection gardens={gardens} />}
+          {activeSection === 'dashboard' && <DashboardSection uid={uid} gardens={gardens} />}
           {activeSection === 'calendario' && <CalendarioSection alerts={alerts} />}
           {activeSection === 'configuracion' && <ConfiguracionSection />}
         </main>
