@@ -113,20 +113,20 @@ const DashboardSection = ({ uid, gardens }) => {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-6 hover:shadow-lg hover:border-[#5B7B7A] transition-all group"
+            className="bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-[#5B7B7A] transition-all group"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
-                <stat.icon className="w-6 h-6 text-white" />
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className={`w-9 h-9 sm:w-12 sm:h-12 ${stat.color} rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
-              <IoTrendingUpOutline className="w-5 h-5 text-[#A17C6B] opacity-50" />
+              <IoTrendingUpOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#A17C6B] opacity-50" />
             </div>
-            <p className="text-3xl font-bold text-[#5B7B7A] mb-1">{stat.value}</p>
-            <p className="text-sm text-[#A17C6B] font-medium">{stat.label}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] mb-1">{stat.value}</p>
+            <p className="text-xs sm:text-sm text-[#A17C6B] font-medium">{stat.label}</p>
           </div>
         ))}
       </div>

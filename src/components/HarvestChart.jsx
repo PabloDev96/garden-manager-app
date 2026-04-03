@@ -106,9 +106,9 @@ const gardenOptions = gardens.map((g) => ({ value: g.id, label: g.name ?? g.id }
         <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6">
 
             {/* Cabecera */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#E0F2E9] rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[#E0F2E9] rounded-xl flex items-center justify-center shrink-0">
                         <IoStatsChartOutline className="w-5 h-5 text-[#5B7B7A]" />
                     </div>
                     <div>
@@ -117,9 +117,9 @@ const gardenOptions = gardens.map((g) => ({ value: g.id, label: g.name ?? g.id }
                     </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex gap-2">
                     {gardens.length > 1 && (
-                        <div className="w-44">
+                        <div className="flex-1 sm:w-44 sm:flex-none">
                             <SelectInput
                                 value={selectedGardenId}
                                 onChange={setSelectedGardenId}
@@ -127,7 +127,7 @@ const gardenOptions = gardens.map((g) => ({ value: g.id, label: g.name ?? g.id }
                             />
                         </div>
                     )}
-                    <div className="w-52">
+                    <div className="flex-1 sm:w-52 sm:flex-none">
                         <SelectInput
                             value={selectedPlantId ?? ''}
                             onChange={setSelectedPlantId}
@@ -158,7 +158,7 @@ const gardenOptions = gardens.map((g) => ({ value: g.id, label: g.name ?? g.id }
                 </div>
             ) : (
                 <ResponsiveContainer width="100%" height={300}>
-                    <ComposedChart data={chartData} margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
+                    <ComposedChart data={chartData} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#CEB5A7" strokeOpacity={0.3} />
                         <XAxis
                             dataKey="fecha"
