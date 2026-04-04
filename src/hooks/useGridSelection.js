@@ -369,4 +369,4 @@ export default function useGridSelection({ gridWrapRef }) {
         cellRefs,
         handlers: { onPointerDown, onPointerMove, onPointerUp },
     };
-}   
+}

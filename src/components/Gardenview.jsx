@@ -20,7 +20,7 @@ import HoverTooltip from './HoverTooltip';
 import DateInput from './DateInput';
 import SelectInput from './SelectInput';
 import useCellSize from '../utils/calculateCellSize';
-import useGridSelection from "../utils/useGridSelection";
+import useGridSelection from "../hooks/useGridSelection";
 
 import addCropUseCase from '../services/gardens/addCropUseCase';
 import removeCropUseCase from '../services/gardens/removeCropUseCase';

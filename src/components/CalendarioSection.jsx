@@ -13,7 +13,7 @@ import {
     IoSearchOutline,
     IoCloseOutline,
 } from 'react-icons/io5';
-import useOpenMeteo from '../utils/useOpenMeteo';
+import useOpenMeteo from '../hooks/useOpenMeteo';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
