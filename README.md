@@ -105,7 +105,8 @@ garden-manager-app/
 │   │       └── requestPermissionUseCase.js # Solicitar permiso y registrar token FCM
 │   │
 │   ├── utils/
-│   │   ├── cropsDatabase.js          # Base de datos estática de cultivos (nombre, emoji, etc.)
+│   │   ├── cropsDatabase.js          # Catálogo de cultivos plantables (24 cultivos: verduras, legumbres, hierbas)
+│   │   ├── cropCalendar.js           # Calendario agrícola: meses de prep/siembra/recolección por cultivo
 │   │   ├── calculateCellSize.js      # Cálculo del tamaño de celda según el grid
 │   │   └── notify.js                 # Wrapper de toasts (sileo)
 │   │
@@ -153,10 +154,14 @@ garden-manager-app/
 - Vista de calendario mensual con indicadores de alertas por día.
 - Integración meteorológica mediante Open-Meteo API (temperatura, precipitación, condición).
 - Búsqueda de ubicación para obtener el tiempo de cualquier localización.
+- **Tareas del mes**: al seleccionar un día muestra qué cultivos del usuario necesitan preparación de tierra, siembra o recolección ese mes, basándose en el calendario agrícola estacional.
 
 ### Dashboard
 - KPIs: huertos activos, alertas pendientes, etc.
 - Gráfica de cosechas con selector de huerto y planta.
+
+### Configuración
+- Selector de cultivos adicionales para el calendario: el usuario puede marcar qué cultivos (además de los plantados) quiere ver en las tareas del mes. La preferencia se guarda en Firestore.
 
 ---
 

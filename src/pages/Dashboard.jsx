@@ -42,6 +42,8 @@ const Dashboard = ({ user }) => {
         handleUpdateGarden,
         handleDeleteGarden,
         handleSaveAlert,
+        calendarCrops,
+        handleToggleCalendarCrop,
     } = useDashboard(user);
 
     const NAV_ITEMS = [
@@ -224,8 +226,8 @@ const Dashboard = ({ user }) => {
                         />
                     )}
                     {activeSection === 'dashboard' && <DashboardSection uid={uid} gardens={gardens} />}
-                    {activeSection === 'calendario' && <CalendarioSection alerts={alerts} />}
-                    {activeSection === 'configuracion' && <ConfiguracionSection />}
+                    {activeSection === 'calendario' && <CalendarioSection alerts={alerts} gardens={gardens} calendarCrops={calendarCrops} />}
+                    {activeSection === 'configuracion' && <ConfiguracionSection calendarCrops={calendarCrops} onToggleCrop={handleToggleCalendarCrop} />}
                 </main>
 
                 <ConfirmModal

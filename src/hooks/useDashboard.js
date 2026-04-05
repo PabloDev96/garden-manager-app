@@ -8,6 +8,8 @@ import addGardenUseCase from '../services/gardens/addGardenUseCase';
 import updateGardenUseCase from '../services/gardens/updateGardenUseCase';
 import deleteGardenUseCase from '../services/gardens/deleteGardenUseCase';
 import addAlertUseCase from '../services/alerts/addAlertUseCase';
+import getCalendarCropsUseCase from '../services/settings/getCalendarCropsUseCase';
+import saveCalendarCropsUseCase from '../services/settings/saveCalendarCropsUseCase';
 
 const todayKey = () => {
     const d = new Date();
@@ -32,6 +34,7 @@ export default function useDashboard(user) {
         const saved = localStorage.getItem('menuExpanded');
         return saved ? JSON.parse(saved) : false;
     });
+    const [calendarCrops, setCalendarCrops] = useState([]);
 
     // Bienvenida
     useEffect(() => {
@@ -106,6 +109,25 @@ export default function useDashboard(user) {
         localStorage.setItem('menuExpanded', JSON.stringify(menuExpanded));
     }, [menuExpanded]);
 
+    // Cargar cultivos extra del calendario desde Firestore
+    useEffect(() => {
+        if (!uid) return;
+        getCalendarCropsUseCase(uid).then(setCalendarCrops).catch(console.error);
+    }, [uid]);
+
+    const handleToggleCalendarCrop = async (cropName) => {
+        const next = calendarCrops.includes(cropName)
+            ? calendarCrops.filter((c) => c !== cropName)
+            : [...calendarCrops, cropName];
+        setCalendarCrops(next);
+        try {
+            await saveCalendarCropsUseCase(uid, next);
+        } catch (e) {
+            console.error(e);
+            setCalendarCrops(calendarCrops); // revertir en caso de error
+        }
+    };
+
     const handleSaveGarden = async (newGarden) => {
         if (!uid) return;
         try {
@@ -169,5 +191,7 @@ export default function useDashboard(user) {
         handleUpdateGarden,
         handleDeleteGarden,
         handleSaveAlert,
+        calendarCrops,
+        handleToggleCalendarCrop,
     };
 }

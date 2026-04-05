@@ -14,6 +14,8 @@ import {
     IoCloseOutline,
 } from 'react-icons/io5';
 import useOpenMeteo from '../hooks/useOpenMeteo';
+import { getMonthTasksForCrops } from '../utils/cropCalendar';
+import { CROPS_DATABASE } from '../utils/cropsDatabase';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -180,7 +182,15 @@ const WeatherTile = ({ weather }) => {
 
 // ─── DayDetail ────────────────────────────────────────────────────────────────
 
-const DayDetail = ({ date, weather, alerts }) => {
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const TASK_CONFIG = {
+    prep:    { label: 'Preparar tierra', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+    sow:     { label: 'Siembra',         color: 'bg-green-100 text-green-800 border-green-200' },
+    harvest: { label: 'Recolección',     color: 'bg-orange-100 text-orange-800 border-orange-200' },
+};
+
+const DayDetail = ({ date, weather, alerts, plantedCrops }) => {
     if (!date) return (
         <div className="flex flex-col items-center justify-center h-full text-center p-6 gap-3">
             <div className="w-14 h-14 rounded-2xl bg-[#E0F2E9] flex items-center justify-center">
@@ -191,73 +201,104 @@ const DayDetail = ({ date, weather, alerts }) => {
         </div>
     );
 
+    const month = date.getMonth() + 1;
+    const tasks = getMonthTasksForCrops(plantedCrops, month);
+    const hasAnyTask = tasks.prep.length > 0 || tasks.sow.length > 0 || tasks.harvest.length > 0;
+
     const dayAlerts = alerts.filter((a) => a.date === toKey(date));
     const cfg = weather ? (CONDITION_CONFIG[weather.condition] ?? CONDITION_CONFIG.cloudy) : null;
     const Icon = cfg?.icon ?? IoSunnyOutline;
     const dayLabel = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
     return (
-        <div className="flex flex-col gap-4 p-5 h-full">
+        <div className="flex flex-col gap-4 p-5 h-full overflow-y-auto">
             <div>
-                <p className="text-xs font-semibold text-[#A17C6B] uppercase tracking-widest mb-0.5">Pronóstico</p>
+                <p className="text-xs font-semibold text-[#A17C6B] uppercase tracking-widest mb-0.5">Resumen del día</p>
                 <p className="text-[#5B7B7A] font-bold text-base capitalize">{dayLabel}</p>
             </div>
 
             {weather ? (
                 <>
-                    {/* Condición principal */}
-                    <div className={`rounded-2xl p-4 flex items-center gap-4 ${cfg.bg}`}>
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/70">
-                            <Icon className={`w-6 h-6 ${cfg.color}`} />
-                        </div>
-                        <div>
-                            <p className="font-bold text-[#3D5A59] text-sm">{cfg.label}</p>
-                            <p className="text-xs text-[#A17C6B]">{weather.tempMin}° - {weather.tempMax}°C</p>
-                        </div>
-                    </div>
-
-                    {/* Precipitación */}
-                    <div className="bg-white rounded-2xl p-4 border border-[#CEB5A7]/30">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                                <IoWaterOutline className="w-4 h-4 text-blue-400" />
-                                <span className="text-xs font-semibold text-[#5B7B7A]">Probabilidad de lluvia</span>
+                    <div className="flex gap-3">
+                        {/* Condición principal */}
+                        <div className={`flex-1 rounded-2xl p-4 flex items-center gap-3 ${cfg.bg}`}>
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/70 shrink-0">
+                                <Icon className={`w-5 h-5 ${cfg.color}`} />
                             </div>
-                            <span className="text-sm font-bold text-blue-500">{weather.precipProb}%</span>
+                            <div className="min-w-0">
+                                <p className="font-bold text-[#3D5A59] text-sm">{cfg.label}</p>
+                                <p className="text-xs text-[#A17C6B]">{weather.tempMin}° - {weather.tempMax}°C</p>
+                            </div>
                         </div>
-                        <div className="w-full h-2 rounded-full bg-blue-100 overflow-hidden">
-                            <div
-                                className="h-full rounded-full bg-gradient-to-r from-blue-300 to-blue-500 transition-all duration-500"
-                                style={{ width: `${weather.precipProb}%` }}
-                            />
-                        </div>
-                        <p className="text-xs text-[#A17C6B] mt-2">
-                            {weather.precipProb >= 70 ? '🌧 Alta probabilidad - planifica el riego' :
-                                weather.precipProb >= 40 ? '🌦 Posible lluvia - revisa tus huertos' :
-                                    weather.precipProb >= 20 ? '⛅ Baja probabilidad de lluvia' :
-                                        '☀️ Sin lluvia prevista'}
-                        </p>
-                    </div>
 
-                    {/* Recordatorios del día */}
-                    {dayAlerts.length > 0 && (
-                        <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 space-y-2">
-                            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
-                                🔔 Recordatorios
+                        {/* Precipitación */}
+                        <div className="flex-1 bg-white rounded-2xl p-4 border border-[#CEB5A7]/30 flex flex-col justify-between">
+                            <div className="flex items-center gap-1.5 mb-2">
+                                <IoWaterOutline className="w-4 h-4 text-blue-400 shrink-0" />
+                                <span className="text-xs font-semibold text-[#5B7B7A]">Lluvia</span>
+                                <span className="ml-auto text-sm font-bold text-blue-500">{weather.precipProb}%</span>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-blue-100 overflow-hidden">
+                                <div
+                                    className="h-full rounded-full bg-gradient-to-r from-blue-300 to-blue-500 transition-all duration-500"
+                                    style={{ width: `${weather.precipProb}%` }}
+                                />
+                            </div>
+                            <p className="text-xs text-[#A17C6B] mt-2 leading-tight">
+                                {weather.precipProb >= 70 ? '🌧 Alta prob.' :
+                                    weather.precipProb >= 40 ? '🌦 Posible lluvia' :
+                                        weather.precipProb >= 20 ? '⛅ Baja prob.' :
+                                            '☀️ Sin lluvia'}
                             </p>
-                            {dayAlerts.map((a) => (
-                                <div key={a.id} className="bg-white rounded-xl px-3 py-2.5 border border-amber-100">
-                                    <p className="text-xs text-amber-700 font-medium">{a.content}</p>
-                                    <p className="text-[10px] text-amber-400 mt-0.5">Huerto: {a.gardenId}</p>
-                                </div>
-                            ))}
                         </div>
-                    )}
+                    </div>
                 </>
             ) : (
                 <div className="bg-white rounded-2xl p-4 border border-[#CEB5A7]/30 text-center">
-                    <p className="text-xs text-[#A17C6B]">Sin datos para este día</p>
+                    <p className="text-xs text-[#A17C6B]">Sin datos meteorológicos</p>
                     <p className="text-xs text-[#CEB5A7] mt-1">Open-Meteo cubre los próximos 16 días</p>
+                </div>
+            )}
+
+            {/* Tareas del mes */}
+            {hasAnyTask && (
+                <div className="bg-[#E0F2E9] rounded-2xl p-4 border border-[#5B7B7A]/20 space-y-3">
+                    {['prep', 'sow', 'harvest'].map((type) => {
+                        const crops = tasks[type];
+                        if (crops.length === 0) return null;
+                        const cfg = TASK_CONFIG[type];
+                        return (
+                            <div key={type}>
+                                <p className="text-[10px] font-bold text-[#5B7B7A] uppercase tracking-wider mb-1.5">
+                                    {cfg.label}
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {crops.map((crop, i) => (
+                                        <span
+                                            key={i}
+                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.color}`}
+                                        >
+                                            {crop.emoji} {crop.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Recordatorios del día */}
+            {dayAlerts.length > 0 && (
+                <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 space-y-2">
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+                        Recordatorios
+                    </p>
+                    {dayAlerts.map((a) => (
+                        <div key={a.id} className="bg-white rounded-xl px-3 py-2.5 border border-amber-100">
+                            <p className="text-xs text-amber-700 font-medium">{a.content}</p>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>
@@ -268,9 +309,44 @@ const DayDetail = ({ date, weather, alerts }) => {
 
 const OVIEDO = { label: 'Oviedo', lat: 43.3614, lon: -5.8593 };
 
-const CalendarioSection = ({ alerts = [] }) => {
+const CalendarioSection = ({ alerts = [], gardens = [], calendarCrops = [] }) => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [ubicacion, setUbicacion] = useState(OVIEDO);
+
+    // Fusiona cultivos plantados + cultivos extra seleccionados en configuración (sin duplicados)
+    const plantedCrops = React.useMemo(() => {
+        const seen = new Set();
+        const result = [];
+
+        // 1. Cultivos plantados en los huertos
+        for (const garden of gardens) {
+            for (const row of (garden.plants ?? [])) {
+                for (const cell of (row ?? [])) {
+                    if (cell?.name && !seen.has(cell.name)) {
+                        seen.add(cell.name);
+                        result.push({ name: cell.name, emoji: cell.emoji ?? '🌱' });
+                    }
+                }
+            }
+        }
+
+        // 2. Cultivos extra seleccionados en configuración
+        for (const name of calendarCrops) {
+            if (!seen.has(name)) {
+                seen.add(name);
+                // Buscar emoji en CROPS_DATABASE
+                let emoji = '🌱';
+                outer: for (const category of Object.values(CROPS_DATABASE)) {
+                    for (const type of Object.values(category.types)) {
+                        if (type.name === name) { emoji = type.emoji; break outer; }
+                    }
+                }
+                result.push({ name, emoji });
+            }
+        }
+
+        return result;
+    }, [gardens, calendarCrops]);
 
     // Intenta obtener la ubicación del dispositivo; si falla, usa Oviedo
     useEffect(() => {
@@ -431,7 +507,7 @@ const CalendarioSection = ({ alerts = [] }) => {
                             <p className="text-[#A17C6B] text-sm">Cargando pronóstico…</p>
                         </div>
                     ) : (
-                        <DayDetail date={selectedDate} weather={selectedWeather} alerts={alerts} />
+                        <DayDetail date={selectedDate} weather={selectedWeather} alerts={alerts} plantedCrops={plantedCrops} />
                     )}
                 </div>
             </div>
