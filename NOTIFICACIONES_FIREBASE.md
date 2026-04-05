@@ -188,7 +188,7 @@ exports.enviarNotificaciones = onSchedule(
         const response = await admin.messaging().sendEachForMulticast({
           tokens,
           notification: {
-            title: '🔔 Recordatorio',
+            title: 'Recordatorio',
             body: alert.content,
           },
         });

@@ -63,7 +63,7 @@ const AlertModal = ({ isOpen, onClose, onSave, gardens = [] }) => {
 
                     {/* Huerto */}
                     <div>
-                        <label className="block text-sm font-semibold text-[#5B7B7A] mb-2">🌿 Huerto</label>
+                        <label className="block text-sm font-semibold text-[#5B7B7A] mb-2">Huerto</label>
                         {gardens.length === 0 ? (
                             <div className="w-full px-4 py-3 rounded-xl border-2 border-[#CEB5A7]/40 bg-[#E0F2E9]/50 text-sm text-[#A17C6B] italic">
                                 No tienes huertos creados
@@ -82,7 +82,7 @@ const AlertModal = ({ isOpen, onClose, onSave, gardens = [] }) => {
 
                     {/* Contenido */}
                     <div>
-                        <label className="block text-sm font-semibold text-[#5B7B7A] mb-2">🔔 Recordatorio</label>
+                        <label className="block text-sm font-semibold text-[#5B7B7A] mb-2">Recordatorio</label>
                         <textarea
                             value={content}
                             onChange={(e) => { setContent(e.target.value); setErrors((p) => ({ ...p, content: null })); }}
@@ -95,7 +95,7 @@ const AlertModal = ({ isOpen, onClose, onSave, gardens = [] }) => {
 
                     {/* Fecha */}
                     <div>
-                        <label className="block text-sm font-semibold text-[#5B7B7A] mb-2">📅 Fecha</label>
+                        <label className="block text-sm font-semibold text-[#5B7B7A] mb-2">Fecha</label>
                         <DateInput
                             value={date}
                             onChange={(val) => { setDate(val); setErrors((p) => ({ ...p, date: null })); }}
