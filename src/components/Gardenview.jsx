@@ -989,19 +989,22 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-4 sm:p-6">
-          <div className="relative flex items-start justify-between gap-2 sm:gap-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0" />
-            <div className="flex-1 min-w-0 text-center">
-              <h3 className="text-lg sm:text-xl font-bold text-[#5B7B7A]">{title}</h3>
-              <p className="text-xs sm:text-sm text-[#A17C6B] mt-1">{message || `Se plantarán ${emptyCells} parcelas`}</p>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-2 border-[#CEB5A7]/40">
+        <div className="bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] px-6 py-5 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <GiPlantSeed className="w-5 h-5 text-white" />
             </div>
-            <button onClick={onClose} disabled={processing} className={`w-8 h-8 sm:w-10 sm:h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
-              <IoClose className="w-4 h-4 sm:w-5 sm:h-5 text-[#5B7B7A]" />
-            </button>
+            <div>
+              <h3 className="text-white font-bold text-lg leading-tight">{title}</h3>
+              <p className="text-white/70 text-xs">{message || `Se plantarán ${emptyCells} parcelas`}</p>
+            </div>
           </div>
+          <button onClick={onClose} disabled={processing} className={`w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white ${processing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
+            <IoClose className="w-5 h-5" />
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div>
@@ -1068,8 +1071,10 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
 
   useEffect(() => {
     setView(plant ? 'harvest' : 'edit');
-    setSelectedCategory(plant?.category || '');
-    setSelectedType(plant?.type || '');
+    const validCategory = plant?.category && CROPS_DATABASE[plant.category] ? plant.category : '';
+    const validType = validCategory && plant?.type && CROPS_DATABASE[validCategory]?.types[plant.type] ? plant.type : '';
+    setSelectedCategory(validCategory);
+    setSelectedType(validType);
     setFormData({ plantedDate: plant?.plantedDate || new Date().toISOString().split('T')[0], wateringDays: plant?.wateringDays || 3 });
     setHarvestData({ units: '', gramsPerUnit: '' });
     setHarvestHistory([]);
@@ -1115,25 +1120,30 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
   const fmtGrams = (g) => g < 1000 ? `${Math.round(g)}g` : `${(g / 1000).toFixed(1)}kg`;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90dvh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-gradient-to-br from-[#E0F2E9] to-white border-b-2 border-[#CEB5A7]/30 p-6 sticky top-0 z-20">
-          <div className="relative flex items-start justify-between gap-4">
-            <div className="w-10 h-10 shrink-0" />
-            <div className="flex-1 min-w-0 text-center">
-              <h3 className="text-xl font-bold text-[#5B7B7A]">{plant ? 'Gestionar planta' : 'Añadir Planta'}</h3>
-              <p className="text-sm text-[#A17C6B] truncate">Parcela ({position?.row},{position?.col}){plant && currentPlantInfo && ` - ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}</p>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-3xl max-w-2xl w-full max-h-[90dvh] overflow-hidden flex flex-col shadow-2xl border-2 border-[#CEB5A7]/40">
+        <div className="bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] px-6 py-5 shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <IoLeafOutline className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg leading-tight">{plant ? 'Gestionar planta' : 'Añadir Planta'}</h3>
+                <p className="text-white/70 text-xs truncate">Parcela ({position?.row},{position?.col}){plant && currentPlantInfo && ` · ${currentPlantInfo.emoji} ${currentPlantInfo.name}`}</p>
+              </div>
             </div>
-            <button onClick={onClose} disabled={saving} className={`w-10 h-10 bg-white border-2 border-[#CEB5A7] rounded-xl flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
-              <IoClose className="w-5 h-5 text-[#5B7B7A]" />
+            <button onClick={onClose} disabled={saving} className={`w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
+              <IoClose className="w-5 h-5" />
             </button>
           </div>
           {plant && (
-            <div className="mt-5">
-              <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-1 flex">
+            <div className="mt-4">
+              <div className="bg-white/10 rounded-2xl p-1 flex">
                 {['harvest', 'edit'].map((v) => (
                   <button key={v} type="button" onClick={() => setView(v)} disabled={saving}
-                    className={`flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all ${view === v ? 'bg-gradient-to-r from-[#5B7B7A] to-[#A17C6B] text-white shadow' : 'text-[#5B7B7A] hover:bg-[#E0F2E9]'} ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${view === v ? 'bg-white text-[#5B7B7A] shadow' : 'text-white/70 hover:text-white hover:bg-white/10'} ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                     {v === 'harvest' ? 'Recolectar' : 'Editar'}
                   </button>
                 ))}
@@ -1224,7 +1234,7 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                   disabled={saving}
                 />
               </div>
-              {selectedCategory && (
+              {selectedCategory && CROPS_DATABASE[selectedCategory] && (
                 <div>
                   <label className="block text-sm font-bold text-[#5B7B7A] mb-2">Tipo de {CROPS_DATABASE[selectedCategory].label}</label>
                   <div className="grid grid-cols-2 gap-3">
