@@ -50,10 +50,10 @@ const HuertosSection = ({ gardens, loadingGardens, gardenTotalsMap, onOpenGarden
                 </button>
             </div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr items-stretch">
+            <div className={gardens.length >= 3 ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr items-stretch" : "flex flex-wrap justify-center gap-6"}>
                 {gardens.map((garden) => (
-                    <HoverTooltip key={garden.id} label="Ver detalles" className="h-full">
-                        <div className="h-full">
+                    <HoverTooltip key={garden.id} label="Ver detalles" className={gardens.length >= 3 ? "h-full" : "w-full max-w-sm"}>
+                        <div className={gardens.length >= 3 ? "h-full" : ""}>
                             <GardenCard
                                 garden={{
                                     ...garden,
