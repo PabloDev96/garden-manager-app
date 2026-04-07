@@ -27,7 +27,10 @@ import removeCropUseCase from '../services/gardens/removeCropUseCase';
 import addHarvestUseCase from '../services/gardens/addHarvestUseCase';
 import getPlotHarvestsUseCase from '../services/gardens/getPlotHarvestUseCase';
 import getGardenTotalsUseCase from '../services/gardens/getGardenTotalUseCase';
+import waterPlantUseCase from '../services/gardens/waterPlantUseCase';
+import waterAllPlantsUseCase from '../services/gardens/waterAllPlantsUseCase';
 import { CROPS_DATABASE } from '../utils/cropsDatabase';
+import { needsWatering, getNextWateringDate } from '../utils/wateringUtils';
 import { notify } from '../utils/notify';
 import ConfirmModal from './ConfirmModal';
 import { Toaster } from 'sileo';
@@ -468,6 +471,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [processingBulk, setProcessingBulk] = useState(false);
   const [loadingToast, setLoadingToast] = useState(null);
+  const [wateringAll, setWateringAll] = useState(false);
 
   const gridWrapRef = useRef(null);
   const { selectedCells, isSelecting, overlayStyle, cellRefs, keyOf, handlers, clearSelection, wasDragRef } = useGridSelection({ gridWrapRef });
@@ -704,6 +708,51 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
     }
   };
 
+  const plantsNeedingWater = useMemo(() => {
+    const result = [];
+    for (let r = 0; r < garden.plants.length; r++) {
+      for (let c = 0; c < garden.plants[r].length; c++) {
+        const plant = garden.plants[r][c];
+        if (plant && needsWatering(plant)) result.push({ row: r, col: c });
+      }
+    }
+    return result;
+  }, [garden.plants]);
+
+  const handleWaterPlant = async (row, col) => {
+    try {
+      setSavingCell(true);
+      await waterPlantUseCase(uid, garden.id, row, col);
+      await onUpdate();
+      setShowPlantModal(false);
+      setSelectedCell(null);
+      notify.success({ title: '💧 Regado', description: 'Último riego actualizado' });
+    } catch (e) {
+      console.error(e);
+      notify.error({ title: 'Error', description: 'No se pudo registrar el riego' });
+    } finally {
+      setSavingCell(false);
+    }
+  };
+
+  const handleWaterAll = async () => {
+    if (!plantsNeedingWater.length) return;
+    try {
+      setWateringAll(true);
+      setLoadingToast('Registrando riego...');
+      await waterAllPlantsUseCase(uid, garden.id, plantsNeedingWater);
+      await onUpdate();
+      setLoadingToast(null);
+      notify.success({ title: '💧 Todas regadas', description: `${plantsNeedingWater.length} plantas actualizadas` });
+    } catch (e) {
+      console.error(e);
+      setLoadingToast(null);
+      notify.error({ title: 'Error', description: 'No se pudo registrar el riego' });
+    } finally {
+      setWateringAll(false);
+    }
+  };
+
   const handleCellClick = (rowIndex, colIndex) => {
     if (selectedCells.size > 0) clearSelection();
     setSelectedCell({ row: rowIndex, col: colIndex });
@@ -816,6 +865,22 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
             ))}
           </div>
 
+          {plantsNeedingWater.length > 0 && (
+            <div className="mb-6 flex items-center justify-between gap-3 bg-blue-50 border-2 border-blue-200 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-2">
+                <IoWaterOutline className="w-5 h-5 text-blue-500 shrink-0" />
+                <p className="text-sm font-semibold text-blue-700">
+                  {plantsNeedingWater.length} planta{plantsNeedingWater.length !== 1 ? 's' : ''} {plantsNeedingWater.length !== 1 ? 'necesitan' : 'necesita'} riego hoy
+                </p>
+              </div>
+              <button onClick={handleWaterAll} disabled={wateringAll || processingBulk}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-60 cursor-pointer shrink-0">
+                <IoWaterOutline className="w-4 h-4" />
+                Regar todas
+              </button>
+            </div>
+          )}
+
           {viewMode === 'grid' && (
             <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
               <div className="mb-6 flex flex-col items-center justify-center gap-3">
@@ -877,6 +942,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                                     ) : (
                                       <><IoLeafOutline className="text-white mb-0.5" style={{ width: Math.min(16, cellSize * 0.5), height: Math.min(16, cellSize * 0.5) }} /><p className="text-[10px] text-white font-bold truncate w-full text-center leading-none" style={{ fontSize: Math.max(8, Math.min(10, Math.floor(cellSize / 4))) }}>{plant.name}</p></>
                                     )}
+                                    {needsWatering(plant) && (
+                                      <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                                        <IoWaterOutline className="w-2.5 h-2.5 text-white" />
+                                      </div>
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -911,7 +981,8 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
           onClose={() => { setShowPlantModal(false); setSelectedCell(null); }}
           onSave={(plantData, meta) => handleAddPlant(plantData, meta)}
           onRemove={currentPlant ? (opts) => handleRemovePlant(opts) : null}
-          onHarvest={currentPlant ? handleHarvest : null} />
+          onHarvest={currentPlant ? handleHarvest : null}
+          onWater={currentPlant ? () => handleWaterPlant(selectedCell.row, selectedCell.col) : null} />
       )}
 
       {showPlantAllModal && <PlantAllModal onClose={() => setShowPlantAllModal(false)} onConfirm={handlePlantAll} processing={processingBulk} emptyCells={emptyCells} />}
@@ -1056,7 +1127,7 @@ const PlantAllModal = ({ onClose, onConfirm, processing, emptyCells, title = "Pl
 };
 
 // ===================== PlantModal =====================
-const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, onRemove, onHarvest }) => {
+const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, onRemove, onHarvest, onWater }) => {
   const [view, setView] = useState(plant ? 'harvest' : 'edit');
   const [selectedCategory, setSelectedCategory] = useState(plant?.category || '');
   const [selectedType, setSelectedType] = useState(plant?.type || '');
@@ -1207,6 +1278,31 @@ const PlantModal = ({ uid, gardenId, plant, position, saving, onClose, onSave, o
                     </div>
                   ) : <p className="text-center text-xs sm:text-sm text-[#A17C6B]">Aún no hay cosechas registradas</p>}
               </div>
+              {onWater && plant?.wateringDays > 0 && (
+                <div className={`rounded-2xl p-4 border-2 flex items-center gap-3 ${needsWatering(plant) ? 'bg-blue-50 border-blue-200' : 'bg-[#E0F2E9] border-[#CEB5A7]/40'}`}>
+                  <IoWaterOutline className={`w-5 h-5 shrink-0 ${needsWatering(plant) ? 'text-blue-500' : 'text-[#5B7B7A]'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-bold ${needsWatering(plant) ? 'text-blue-700' : 'text-[#5B7B7A]'}`}>
+                      {needsWatering(plant) ? 'Necesita riego' : 'Riego al día'}
+                    </p>
+                    <p className="text-xs text-[#A17C6B]">
+                      {plant.lastWatered
+                        ? `Último: ${new Date(plant.lastWatered).toLocaleDateString('es-ES')}`
+                        : `Plantado: ${new Date(plant.plantedDate).toLocaleDateString('es-ES')}`}
+                      {' · '}cada {plant.wateringDays} días
+                      {!needsWatering(plant) && getNextWateringDate(plant) && ` · próximo ${getNextWateringDate(plant).toLocaleDateString('es-ES')}`}
+                    </p>
+                  </div>
+                  {needsWatering(plant) && (
+                    <button onClick={onWater} disabled={saving}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-60 cursor-pointer shrink-0">
+                      <IoWaterOutline className="w-4 h-4" />
+                      Regar
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className="border-t-2 border-[#CEB5A7]/30 pt-6">
                 <h4 className="text-lg font-bold text-[#5B7B7A] mb-4">Nueva Cosecha</h4>
                 <div className="mb-4">

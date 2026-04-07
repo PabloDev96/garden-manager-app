@@ -16,6 +16,7 @@ import {
 import useOpenMeteo from '../hooks/useOpenMeteo';
 import { getMonthTasksForCrops } from '../utils/cropCalendar';
 import { CROPS_DATABASE } from '../utils/cropsDatabase';
+import { getPlantsToWater } from '../utils/wateringUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -190,7 +191,7 @@ const TASK_CONFIG = {
     harvest: { label: 'Recolección',     color: 'bg-orange-100 text-orange-800 border-orange-200' },
 };
 
-const DayDetail = ({ date, weather, alerts, plantedCrops }) => {
+const DayDetail = ({ date, weather, alerts, plantedCrops, gardens }) => {
     if (!date) return (
         <div className="flex flex-col items-center justify-center h-full text-center p-6 gap-3">
             <div className="w-14 h-14 rounded-2xl bg-[#E0F2E9] flex items-center justify-center">
@@ -204,6 +205,8 @@ const DayDetail = ({ date, weather, alerts, plantedCrops }) => {
     const month = date.getMonth() + 1;
     const tasks = getMonthTasksForCrops(plantedCrops, month);
     const hasAnyTask = tasks.prep.length > 0 || tasks.sow.length > 0 || tasks.harvest.length > 0;
+
+    const plantsToWater = getPlantsToWater(gardens, date);
 
     const dayAlerts = alerts.filter((a) => a.date === toKey(date));
     const cfg = weather ? (CONDITION_CONFIG[weather.condition] ?? CONDITION_CONFIG.cloudy) : null;
@@ -257,6 +260,33 @@ const DayDetail = ({ date, weather, alerts, plantedCrops }) => {
                 <div className="bg-white rounded-2xl p-4 border border-[#CEB5A7]/30 text-center">
                     <p className="text-xs text-[#A17C6B]">Sin datos meteorológicos</p>
                     <p className="text-xs text-[#CEB5A7] mt-1">Open-Meteo cubre los próximos 16 días</p>
+                </div>
+            )}
+
+            {/* Riego pendiente */}
+            {plantsToWater.length > 0 && (
+                <div className="bg-blue-50 rounded-2xl px-4 py-3 border border-blue-200">
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <IoWaterOutline className="w-3.5 h-3.5 text-blue-500" />
+                        <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Riego pendiente</p>
+                        <span className="ml-auto text-xs font-bold text-blue-500">{plantsToWater.length}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                        {Object.values(
+                            plantsToWater.reduce((acc, { plant }) => {
+                                const key = plant.name;
+                                if (acc[key]) acc[key].count++;
+                                else acc[key] = { name: plant.name, emoji: plant.emoji ?? '🌱', count: 1 };
+                                return acc;
+                            }, {})
+                        ).map(({ name, emoji, count }) => (
+                            <span key={name}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-white border border-blue-200 text-blue-700">
+                                {emoji} {name}
+                                {count > 1 && <span className="ml-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{count}</span>}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -507,7 +537,7 @@ const CalendarioSection = ({ alerts = [], gardens = [], calendarCrops = [] }) =>
                             <p className="text-[#A17C6B] text-sm">Cargando pronóstico…</p>
                         </div>
                     ) : (
-                        <DayDetail date={selectedDate} weather={selectedWeather} alerts={alerts} plantedCrops={plantedCrops} />
+                        <DayDetail date={selectedDate} weather={selectedWeather} alerts={alerts} plantedCrops={plantedCrops} gardens={gardens} />
                     )}
                 </div>
             </div>
