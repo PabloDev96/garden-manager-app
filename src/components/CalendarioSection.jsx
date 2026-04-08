@@ -230,7 +230,7 @@ const DayDetail = ({ date, weather, alerts, plantedCrops, gardens }) => {
                             </div>
                             <div className="min-w-0">
                                 <p className="font-bold text-[#3D5A59] text-sm">{cfg.label}</p>
-                                <p className="text-xs text-[#A17C6B]">{weather.tempMin}° - {weather.tempMax}°C</p>
+                                <p className="text-xs text-[#A17C6B]">{weather.tempMin}°C - {weather.tempMax}°C</p>
                             </div>
                         </div>
 

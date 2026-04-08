@@ -225,7 +225,7 @@ const Dashboard = ({ user }) => {
                             onAddAlert={() => setShowAlertModal(true)}
                         />
                     )}
-                    {activeSection === 'dashboard' && <DashboardSection uid={uid} gardens={gardens} />}
+                    {activeSection === 'dashboard' && <DashboardSection uid={uid} gardens={gardens} alerts={alerts} />}
                     {activeSection === 'calendario' && <CalendarioSection alerts={alerts} gardens={gardens} calendarCrops={calendarCrops} />}
                     {activeSection === 'configuracion' && <ConfiguracionSection calendarCrops={calendarCrops} onToggleCrop={handleToggleCalendarCrop} />}
                 </main>

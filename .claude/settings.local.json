@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/Pablo/Documents/MisProyectos/garden-manager-app/src -name *[Pp]lant* -o -name *[Cc]rop*)"
+    ]
+  }
+}

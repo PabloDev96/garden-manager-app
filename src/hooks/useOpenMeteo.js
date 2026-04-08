@@ -32,7 +32,7 @@ const parseResponse = (data) => {
 };
 
 // ─── Hook principal ───────────────────────────────────────────────────────────
-const useOpenMeteo = ({ latitude, longitude, daysAhead = 16 } = {}) => {
+const useOpenMeteo = ({ latitude, longitude, daysAhead = 16, pastDays = 0 } = {}) => {
     const [weatherData, setWeatherData] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -53,7 +53,8 @@ const useOpenMeteo = ({ latitude, longitude, daysAhead = 16 } = {}) => {
                 'precipitation_probability_max',
             ].join(','),
             timezone: 'auto',
-            forecast_days: String(daysAhead),  // solo hacia adelante, máx 16
+            forecast_days: String(daysAhead),
+            past_days: String(pastDays),
         });
 
         try {
@@ -67,7 +68,7 @@ const useOpenMeteo = ({ latitude, longitude, daysAhead = 16 } = {}) => {
         } finally {
             setLoading(false);
         }
-    }, [latitude, longitude, daysAhead]);
+    }, [latitude, longitude, daysAhead, pastDays]);
 
     useEffect(() => {
         fetchWeather();

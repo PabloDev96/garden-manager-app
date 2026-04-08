@@ -1,36 +1,189 @@
+import { useState, useEffect, useMemo } from 'react';
 import {
     IoLeafOutline,
     IoWarningOutline,
     IoWaterOutline,
     IoSunnyOutline,
-    IoTrendingUpOutline,
+    IoPartlySunnyOutline,
+    IoCloudyOutline,
+    IoRainyOutline,
+    IoThunderstormOutline,
+    IoGridOutline,
+    IoStatsChartOutline,
+    IoStarOutline,
 } from 'react-icons/io5';
 import HarvestChart from './HarvestChart';
+import { getPlantsToWater } from '../utils/wateringUtils';
+import useOpenMeteo from '../hooks/useOpenMeteo';
+import getGardenHarvestsUseCase from '../services/gardens/getGardenHarvestsUseCase';
 
-const DashboardSection = ({ uid, gardens }) => {
+const OVIEDO = { lat: 43.3614, lon: -5.8593 };
+
+const CONDITION_CONFIG = {
+    sunny:        { icon: IoSunnyOutline,        label: 'Soleado',               color: 'bg-amber-400' },
+    partlyCloudy: { icon: IoPartlySunnyOutline,  label: 'Parcialmente nublado',  color: 'bg-amber-300' },
+    cloudy:       { icon: IoCloudyOutline,        label: 'Nublado',               color: 'bg-slate-400' },
+    rainy:        { icon: IoRainyOutline,         label: 'Lluvia',                color: 'bg-blue-400'  },
+    stormy:       { icon: IoThunderstormOutline,  label: 'Tormenta',              color: 'bg-purple-400'},
+};
+
+const DashboardSection = ({ uid, gardens, alerts = [] }) => {
+    const today = new Date().toISOString().split('T')[0];
+
+    // — KPIs básicos —
+    const pendingWater = getPlantsToWater(gardens).length;
+    const pendingAlerts = alerts.filter((a) => a.date >= today).length;
+
+    // — Tiempo (7 días para calcular racha) —
+    const { weatherData } = useOpenMeteo({ latitude: OVIEDO.lat, longitude: OVIEDO.lon, daysAhead: 1, pastDays: 7 });
+    const todayWeather = weatherData[today];
+    const weatherCfg = todayWeather ? (CONDITION_CONFIG[todayWeather.condition] ?? CONDITION_CONFIG.cloudy) : null;
+
+    // — Peso total recolectado —
+    const [totalGrams, setTotalGrams] = useState(null);
+    useEffect(() => {
+        if (!uid || !gardens.length) { setTotalGrams(0); return; }
+        Promise.all(gardens.map((g) => getGardenHarvestsUseCase(uid, g.id)))
+            .then((results) => {
+                const total = results.flat().reduce((sum, h) => sum + (h.totalGrams ?? 0), 0);
+                setTotalGrams(total);
+            })
+            .catch(() => setTotalGrams(0));
+    }, [uid, gardens]);
+
+    // — Número de plantas activas —
+    const plantCount = useMemo(() => {
+        let count = 0;
+        for (const g of gardens) {
+            for (const row of (g.plants ?? [])) {
+                for (const cell of (row ?? [])) {
+                    if (cell) count++;
+                }
+            }
+        }
+        return count;
+    }, [gardens]);
+
+    // — Cultivo más plantado —
+    const mostPlanted = useMemo(() => {
+        const counts = {};
+        for (const g of gardens) {
+            for (const row of (g.plants ?? [])) {
+                for (const cell of (row ?? [])) {
+                    if (cell?.name) {
+                        const key = cell.name;
+                        counts[key] = {
+                            count: (counts[key]?.count ?? 0) + 1,
+                            emoji: cell.emoji ?? '',
+                        };
+                    }
+                }
+            }
+        }
+        const entries = Object.entries(counts);
+        if (!entries.length) return null;
+        const [name, data] = entries.sort((a, b) => b[1].count - a[1].count)[0];
+        return { name, count: data.count, emoji: data.emoji };
+    }, [gardens]);
+
+    // — Racha meteorológica (días consecutivos hacia atrás desde hoy) —
+    const streak = useMemo(() => {
+        const isRainy = (c) => c === 'rainy' || c === 'stormy';
+        const isSunny = (c) => c === 'sunny' || c === 'partlyCloudy';
+        const todayCond = weatherData[today]?.condition;
+        if (!todayCond) return null;
+        const todayRainy = isRainy(todayCond);
+        let count = 0;
+        let allSunny = true;
+        for (let i = 0; i <= 7; i++) {
+            const d = new Date(today + 'T12:00:00');
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const cond = weatherData[dateStr]?.condition;
+            if (!cond) break;
+            if (todayRainy ? isRainy(cond) : !isRainy(cond)) {
+                count++;
+                if (!isSunny(cond)) allSunny = false;
+            } else {
+                break;
+            }
+        }
+        return { count, rainy: todayRainy, sunny: !todayRainy && allSunny };
+    }, [weatherData, today]);
+
+    // — Formato peso —
+    const weightLabel = totalGrams === null
+        ? '—'
+        : totalGrams >= 1000
+            ? `${(totalGrams / 1000).toFixed(1)} kg`
+            : `${totalGrams} g`;
+
     const stats = [
-        { label: 'Huertos Activos', value: gardens.length, icon: IoLeafOutline, color: 'bg-[#5B7B7A]' },
-        { label: 'Alertas Pendientes', value: 0, icon: IoWarningOutline, color: 'bg-[#A17C6B]' },
-        { label: 'Riego Hoy', value: 0, icon: IoWaterOutline, color: 'bg-[#5B7B7A]' },
-        { label: 'Días de Sol', value: 5, icon: IoSunnyOutline, color: 'bg-[#CEB5A7]' },
+        { label: 'Huertos activos',     value: gardens.length,  icon: IoLeafOutline,    color: 'bg-[#5B7B7A]' },
+        {
+            label: 'Alertas pendientes',
+            value: pendingAlerts === 0 ? 'Sin alertas' : pendingAlerts,
+            icon: IoWarningOutline,
+            color: pendingAlerts === 0 ? 'bg-[#A17C6B]' : 'bg-orange-500',
+            valueColor: pendingAlerts === 0 ? 'text-[#5B7B7A]' : 'text-orange-500',
+            small: pendingAlerts === 0,
+        },
+        {
+            label: 'Pendientes de regar',
+            value: pendingWater === 0 ? 'Todo regado' : pendingWater,
+            icon: IoWaterOutline,
+            color: pendingWater === 0 ? 'bg-[#5B7B7A]' : 'bg-[#5B82A0]',
+            valueColor: pendingWater === 0 ? 'text-[#5B7B7A]' : 'text-[#5B82A0]',
+            small: pendingWater === 0,
+        },
+        {
+            label: weatherCfg ? weatherCfg.label : 'Tiempo hoy',
+            value: todayWeather ? `${todayWeather.tempMax}°C` : '—',
+            icon: weatherCfg ? weatherCfg.icon : IoSunnyOutline,
+            color: weatherCfg ? weatherCfg.color : 'bg-[#CEB5A7]',
+        },
+        { label: 'Plantas activas',     value: plantCount,      icon: IoGridOutline,    color: 'bg-[#5B7B7A]' },
+        { label: 'Total recolectado',   value: weightLabel,     icon: IoStatsChartOutline, color: 'bg-[#A17C6B]' },
+        {
+            label: mostPlanted ? `Más plantado (${mostPlanted.count})` : 'Sin cultivos',
+            value: mostPlanted ? `${mostPlanted.emoji} ${mostPlanted.name}` : '—',
+            icon: IoStarOutline,
+            color: 'bg-amber-500',
+            small: !!mostPlanted,
+        },
+        {
+            label: streak
+                ? streak.rainy
+                    ? 'Días lloviendo seguidos'
+                    : streak.sunny && streak.count >= 3
+                        ? 'Días de sol seguidos'
+                        : 'Días sin llover'
+                : 'Sin datos',
+            value: streak ? streak.count : '—',
+            icon: streak?.rainy ? IoRainyOutline : IoSunnyOutline,
+            color: streak
+                ? streak.rainy ? 'bg-blue-400' : 'bg-amber-400'
+                : 'bg-[#CEB5A7]',
+        },
     ];
 
     return (
         <div className="space-y-8">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                 {stats.map((stat, index) => (
                     <div
                         key={index}
-                        className="bg-white border-2 border-[#CEB5A7]/40 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-[#5B7B7A] transition-all group"
+                        className="bg-white border border-[#CEB5A7]/40 rounded-xl p-3 hover:shadow-md hover:border-[#5B7B7A]/50 transition-all group flex items-center gap-3"
                     >
-                        <div className="flex items-start justify-between mb-3 sm:mb-4">
-                            <div className={`w-9 h-9 sm:w-12 sm:h-12 ${stat.color} rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
-                                <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                            </div>
-                            <IoTrendingUpOutline className="w-4 h-4 sm:w-5 sm:h-5 text-[#A17C6B] opacity-50" />
+                        <div className={`w-9 h-9 ${stat.color} rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                            <stat.icon className="w-4 h-4 text-white" />
                         </div>
-                        <p className="text-2xl sm:text-3xl font-bold text-[#5B7B7A] mb-1">{stat.value}</p>
-                        <p className="text-xs sm:text-sm text-[#A17C6B] font-medium">{stat.label}</p>
+                        <div className="min-w-0">
+                            <p className={`font-bold leading-tight truncate ${stat.small ? 'text-sm' : 'text-lg'} ${stat.valueColor ?? 'text-[#5B7B7A]'}`}>
+                                {stat.value}
+                            </p>
+                            <p className="text-[10px] text-[#A17C6B] font-medium leading-tight">{stat.label}</p>
+                        </div>
                     </div>
                 ))}
             </div>
