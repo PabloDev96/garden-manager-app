@@ -53,7 +53,7 @@ const LoadingToast = ({ message }) => {
 };
 
 // ===================== TableView =====================
-const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processingBulk, refreshKey, onReady }) => {
+const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processingBulk, refreshKey, onReady, onWaterCell }) => {
   const [allHarvests, setAllHarvests] = useState({});
   const [loading, setLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState(new Set());
@@ -196,6 +196,10 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
             className="flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-[#5B7B7A] to-[#A17C6B] text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer">
             <GiPlantSeed className="w-4 h-4" />Plantar
           </button>
+          <button onClick={() => onBulkAction('water', checkedCells)} disabled={processingBulk}
+            className="flex items-center gap-2 px-3 py-2 bg-white border-2 border-blue-200 text-blue-600 rounded-xl text-sm font-medium hover:bg-blue-50 transition-all disabled:opacity-50 cursor-pointer">
+            <IoWaterOutline className="w-4 h-4" />Regar
+          </button>
           <button onClick={() => onBulkAction('delete', checkedCells)} disabled={processingBulk}
             className="flex items-center gap-2 px-3 py-2 bg-white border-2 border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 transition-all disabled:opacity-50 cursor-pointer">
             <IoTrashOutline className="w-4 h-4" />Eliminar
@@ -275,13 +279,33 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                         className="w-4 h-4 rounded border-2 border-[#CEB5A7] accent-[#5B7B7A] cursor-pointer" />
                     </div>
                     <span className="text-xs font-mono font-bold text-[#A17C6B]">({r},{c})</span>
-                    <div className="flex items-center gap-1.5 min-w-0 cursor-pointer" onClick={() => onCellClick(r, c)}>
-                      {plantInfo ? (
-                        <><span className="text-base shrink-0">{plantInfo.emoji}</span><span className="text-xs font-semibold text-[#3D5A59] truncate">{plantInfo.name}</span></>
-                      ) : (
-                        <span className="flex items-center gap-1 text-xs text-[#A17C6B] italic hover:text-[#5B7B7A]">
-                          <IoAddOutline className="w-3 h-3" />Añadir
-                        </span>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <div className="flex items-center gap-1 min-w-0 overflow-hidden cursor-pointer" onClick={() => onCellClick(r, c)}>
+                        {plantInfo ? (
+                          <><span className="text-base shrink-0">{plantInfo.emoji}</span><span className="text-xs font-semibold text-[#3D5A59] truncate">{plantInfo.name}</span></>
+                        ) : (
+                          <span className="flex items-center gap-1 text-xs text-[#A17C6B] italic hover:text-[#5B7B7A]">
+                            <IoAddOutline className="w-3 h-3" />Añadir
+                          </span>
+                        )}
+                      </div>
+                      {plant && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <HoverTooltip label="Recolectar" mode="auto">
+                            <button onClick={(e) => { e.stopPropagation(); onCellClick(r, c); }} disabled={processingBulk}
+                              className="w-6 h-6 flex items-center justify-center rounded-md bg-[#E0F2E9] hover:bg-[#5B7B7A]/20 text-[#5B7B7A] cursor-pointer disabled:opacity-50">
+                              <IoBasketOutline className="w-3.5 h-3.5" />
+                            </button>
+                          </HoverTooltip>
+                          {needsWatering(plant) && (
+                            <HoverTooltip label="Regar hoy" mode="auto">
+                              <button onClick={(e) => { e.stopPropagation(); onWaterCell(r, c); }} disabled={processingBulk}
+                                className="w-6 h-6 flex items-center justify-center rounded-md bg-blue-100 hover:bg-blue-200 text-blue-600 cursor-pointer disabled:opacity-50">
+                                <IoWaterOutline className="w-3.5 h-3.5" />
+                              </button>
+                            </HoverTooltip>
+                          )}
+                        </div>
                       )}
                     </div>
                     <span className="text-xs text-[#A17C6B]">{plant?.plantedDate ? fmtDate(new Date(plant.plantedDate)) : '—'}</span>
@@ -301,10 +325,12 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                     </div>
                     <div className="flex justify-center">
                       {harvests.length > 0 && (
-                        <button onClick={(e) => { e.stopPropagation(); toggleRow(key); }}
-                          className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-[#E0F2E9] text-[#5B7B7A] cursor-pointer">
-                          {isExpanded ? <IoChevronUpOutline className="w-3.5 h-3.5" /> : <IoChevronDownOutline className="w-3.5 h-3.5" />}
-                        </button>
+                        <HoverTooltip label="Ver historial" mode="auto">
+                          <button onClick={(e) => { e.stopPropagation(); toggleRow(key); }}
+                            className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-[#E0F2E9] text-[#5B7B7A] cursor-pointer">
+                            {isExpanded ? <IoChevronUpOutline className="w-3.5 h-3.5" /> : <IoChevronDownOutline className="w-3.5 h-3.5" />}
+                          </button>
+                        </HoverTooltip>
                       )}
                     </div>
                   </div>
@@ -325,6 +351,16 @@ const TableView = ({ uid, gardenId, garden, onCellClick, onBulkAction, processin
                           <>
                             <span className="text-xl shrink-0">{plantInfo.emoji}</span>
                             <span className="text-sm font-bold text-[#3D5A59] truncate">{plantInfo.name}</span>
+                            <button onClick={(e) => { e.stopPropagation(); onCellClick(r, c); }}
+                              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-[#E0F2E9] text-[#5B7B7A] cursor-pointer">
+                              <IoBasketOutline className="w-4 h-4" />
+                            </button>
+                            {plant && needsWatering(plant) && (
+                              <button onClick={(e) => { e.stopPropagation(); onWaterCell(r, c); }}
+                                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 cursor-pointer">
+                                <IoWaterOutline className="w-4 h-4" />
+                              </button>
+                            )}
                           </>
                         ) : (
                           <span className="flex items-center gap-1 text-sm text-[#A17C6B] italic">
@@ -865,22 +901,6 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
             ))}
           </div>
 
-          {plantsNeedingWater.length > 0 && (
-            <div className="mb-6 flex items-center justify-between gap-3 bg-blue-50 border-2 border-blue-200 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2">
-                <IoWaterOutline className="w-5 h-5 text-blue-500 shrink-0" />
-                <p className="text-sm font-semibold text-blue-700">
-                  {plantsNeedingWater.length} planta{plantsNeedingWater.length !== 1 ? 's' : ''} {plantsNeedingWater.length !== 1 ? 'necesitan' : 'necesita'} riego hoy
-                </p>
-              </div>
-              <button onClick={handleWaterAll} disabled={wateringAll || processingBulk}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-60 cursor-pointer shrink-0">
-                <IoWaterOutline className="w-4 h-4" />
-                Regar todas
-              </button>
-            </div>
-          )}
-
           {viewMode === 'grid' && (
             <div className="bg-white border-2 border-[#CEB5A7]/40 rounded-3xl p-6 md:p-8">
               <div className="mb-6 flex flex-col items-center justify-center gap-3">
@@ -893,6 +913,11 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   {plantedCells > 0 && (
                     <button onClick={() => setShowDeleteAllConfirm(true)} disabled={processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
                       <IoTrashOutline className="w-4 h-4" /><span>Eliminar todo</span>
+                    </button>
+                  )}
+                  {plantsNeedingWater.length > 0 && (
+                    <button onClick={handleWaterAll} disabled={wateringAll || processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-blue-200 text-blue-600 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
+                      <IoWaterOutline className="w-4 h-4" /><span>Regar todas ({plantsNeedingWater.length})</span>
                     </button>
                   )}
                 </div>
@@ -971,7 +996,33 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
             <TableView uid={uid} gardenId={garden.id} garden={garden} onCellClick={handleCellClick}
               processingBulk={processingBulk} refreshKey={tableRefreshKey}
               onReady={(api) => { tableApiRef.current = api; }}
-              onBulkAction={(action, cells) => { setTableBulkCells(cells); if (action === 'plant') setShowTablePlantModal(true); else if (action === 'delete') setShowTableDeleteConfirm(true); }} />
+              onWaterCell={(r, c) => handleWaterPlant(r, c)}
+              onBulkAction={async (action, cells) => {
+                if (action === 'water') {
+                  const toWater = [];
+                  for (const cellKey of cells) {
+                    const [r, c] = cellKey.split('-').map(Number);
+                    if (garden.plants[r]?.[c] && needsWatering(garden.plants[r][c])) toWater.push({ row: r, col: c });
+                  }
+                  if (!toWater.length) return;
+                  try {
+                    setWateringAll(true);
+                    setLoadingToast('Registrando riego...');
+                    await waterAllPlantsUseCase(uid, garden.id, toWater);
+                    await onUpdate();
+                    setLoadingToast(null);
+                    notify.success({ title: '💧 Regadas', description: `${toWater.length} plantas actualizadas` });
+                  } catch (e) {
+                    console.error(e);
+                    setLoadingToast(null);
+                    notify.error({ title: 'Error', description: 'No se pudo registrar el riego' });
+                  } finally { setWateringAll(false); }
+                  return;
+                }
+                setTableBulkCells(cells);
+                if (action === 'plant') setShowTablePlantModal(true);
+                else if (action === 'delete') setShowTableDeleteConfirm(true);
+              }} />
           )}
         </div>
       </main>
