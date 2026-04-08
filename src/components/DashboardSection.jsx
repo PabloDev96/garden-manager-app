@@ -119,7 +119,8 @@ const DashboardSection = ({ uid, gardens, alerts = [] }) => {
             : `${totalGrams} g`;
 
     const stats = [
-        { label: 'Huertos activos',     value: gardens.length,  icon: IoLeafOutline,    color: 'bg-[#5B7B7A]' },
+        { label: 'Huertos activos',   value: gardens.length, icon: IoLeafOutline,      color: 'bg-[#5B7B7A]' },
+        { label: 'Plantas activas',   value: plantCount,     icon: IoGridOutline,      color: 'bg-[#5B7B7A]' },
         {
             label: 'Alertas pendientes',
             value: pendingAlerts === 0 ? 'Sin alertas' : pendingAlerts,
@@ -136,20 +137,21 @@ const DashboardSection = ({ uid, gardens, alerts = [] }) => {
             valueColor: pendingWater === 0 ? 'text-[#5B7B7A]' : 'text-[#5B82A0]',
             small: pendingWater === 0,
         },
+        { label: 'Total recolectado', value: weightLabel,    icon: IoStatsChartOutline, color: 'bg-[#A17C6B]' },
+        {
+            label: 'Cultivo más plantado',
+            value: mostPlanted ? `${mostPlanted.emoji} ${mostPlanted.name}` : '—',
+            mobileValue: mostPlanted?.emoji ?? '—',
+            badge: mostPlanted?.count,
+            icon: IoStarOutline,
+            color: 'bg-amber-500',
+            small: !!mostPlanted,
+        },
         {
             label: weatherCfg ? weatherCfg.label : 'Tiempo hoy',
             value: todayWeather ? `${todayWeather.tempMax}°C` : '—',
             icon: weatherCfg ? weatherCfg.icon : IoSunnyOutline,
             color: weatherCfg ? weatherCfg.color : 'bg-[#CEB5A7]',
-        },
-        { label: 'Plantas activas',     value: plantCount,      icon: IoGridOutline,    color: 'bg-[#5B7B7A]' },
-        { label: 'Total recolectado',   value: weightLabel,     icon: IoStatsChartOutline, color: 'bg-[#A17C6B]' },
-        {
-            label: mostPlanted ? `Más plantado (${mostPlanted.count})` : 'Sin cultivos',
-            value: mostPlanted ? `${mostPlanted.emoji} ${mostPlanted.name}` : '—',
-            icon: IoStarOutline,
-            color: 'bg-amber-500',
-            small: !!mostPlanted,
         },
         {
             label: streak
@@ -179,9 +181,17 @@ const DashboardSection = ({ uid, gardens, alerts = [] }) => {
                             <stat.icon className="w-4 h-4 text-white" />
                         </div>
                         <div className="min-w-0">
-                            <p className={`font-bold leading-tight truncate ${stat.small ? 'text-sm' : 'text-lg'} ${stat.valueColor ?? 'text-[#5B7B7A]'}`}>
-                                {stat.value}
-                            </p>
+                            <div className={`flex items-center gap-1.5 font-bold leading-tight ${stat.small ? 'text-sm' : 'text-lg'} ${stat.valueColor ?? 'text-[#5B7B7A]'}`}>
+                                {stat.mobileValue
+                                    ? <><span className="truncate sm:hidden">{stat.mobileValue}</span><span className="truncate hidden sm:inline">{stat.value}</span></>
+                                    : <span className="truncate">{stat.value}</span>
+                                }
+                                {stat.badge && (
+                                    <span className="shrink-0 text-[10px] font-bold bg-amber-100 text-amber-700 rounded-full px-1.5 py-0.5 leading-none">
+                                        ×{stat.badge}
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-[10px] text-[#A17C6B] font-medium leading-tight">{stat.label}</p>
                         </div>
                     </div>
