@@ -917,7 +917,7 @@ const GardenView = ({ uid, garden, onClose, onUpdate, onDelete, onTotalsUpdate }
                   )}
                   {plantsNeedingWater.length > 0 && (
                     <button onClick={handleWaterAll} disabled={wateringAll || processingBulk} className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-blue-200 text-blue-600 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-all font-medium text-sm disabled:opacity-60 cursor-pointer">
-                      <IoWaterOutline className="w-4 h-4" /><span>Regar todas ({plantsNeedingWater.length})</span>
+                      <IoWaterOutline className="w-4 h-4" /><span>Regar todo</span>
                     </button>
                   )}
                 </div>
